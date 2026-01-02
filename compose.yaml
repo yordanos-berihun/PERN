@@ -1,0 +1,10 @@
+services:
+  lmsbackend:
+    image: lmsbackend
+    build:
+      context: lms-backend
+      dockerfile: ./Dockerfile
+    environment:
+      NODE_ENV: production
+    ports:
+      - 3000:3000
