@@ -17,41 +17,41 @@ export default function Login() {
   };
 
   return (
-    <div className=\"auth-container\">
-      <div className=\"auth-card\">
+    <div className="auth-container">
+      <div className="auth-card">
         <h2>Login to Your Account</h2>
         
         {loginError && (
-          <div className=\"error-message\">
+          <div className="error-message">
             {loginError.response?.data?.error || 'Login failed'}
           </div>
         )}
 
-        <form onSubmit={handleSubmit(onSubmit)} className=\"auth-form\">
-          <div className=\"form-group\">
-            <label htmlFor=\"email\">Email</label>
+        <form onSubmit={handleSubmit(onSubmit)} className="auth-form">
+          <div className="form-group">
+            <label htmlFor="email">Email</label>
             <input
-              type=\"email\"
-              id=\"email\"
+              type="email"
+              id="email"
               {...register('email', {
                 required: 'Email is required',
                 pattern: {
-                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}$/i,
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
                   message: 'Invalid email address'
                 }
               })}
               className={errors.email ? 'error' : ''}
             />
             {errors.email && (
-              <span className=\"field-error\">{errors.email.message}</span>
+              <span className="field-error">{errors.email.message}</span>
             )}
           </div>
 
-          <div className=\"form-group\">
-            <label htmlFor=\"password\">Password</label>
+          <div className="form-group">
+            <label htmlFor="password">Password</label>
             <input
-              type=\"password\"
-              id=\"password\"
+              type="password"
+              id="password"
               {...register('password', {
                 required: 'Password is required',
                 minLength: {
@@ -62,21 +62,21 @@ export default function Login() {
               className={errors.password ? 'error' : ''}
             />
             {errors.password && (
-              <span className=\"field-error\">{errors.password.message}</span>
+              <span className="field-error">{errors.password.message}</span>
             )}
           </div>
 
           <button 
-            type=\"submit\" 
+            type="submit" 
             disabled={isLoginLoading}
-            className=\"auth-button\"
+            className="auth-button"
           >
             {isLoginLoading ? 'Logging in...' : 'Login'}
           </button>
         </form>
 
-        <p className=\"auth-link\">
-          Don't have an account? <Link to=\"/register\">Sign up</Link>
+        <p className="auth-link">
+          Don't have an account? <Link to="/register">Sign up</Link>
         </p>
       </div>
     </div>
