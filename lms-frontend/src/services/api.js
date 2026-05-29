@@ -23,42 +23,10 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor for token refresh
+// Response interceptor to forward errors
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-    
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      
-      const refreshToken = useAuthStore.getState().refreshToken;
-      if (refreshToken) {
-        try {
-          const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-            refreshToken
-          });
-          
-          const { token } = response.data.data;
-          useAuthStore.getState().setAuth({
-            ...useAuthStore.getState(),
-            token
-          });
-          
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-          return api(originalRequest);
-        } catch (refreshError) {
-          useAuthStore.getState().logout();
-          window.location.href = '/login';
-        }
-      } else {
-        useAuthStore.getState().logout();
-        window.location.href = '/login';
-      }
-    }
-    
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 // Auth API

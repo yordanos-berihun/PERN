@@ -47,6 +47,10 @@ const createCourse = async (req, res) => {
       return res.status(400).json({ error: 'Title is required (min 3 chars)' });
     }
 
+    if (req.user.role !== 'INSTRUCTOR' && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Only instructors and admins can create courses' });
+    }
+
     const course = await prisma.course.create({
       data: {
         title: title.trim(),
