@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import api from '../services/api'
+import { useAuth } from '../hooks/useAuth'
 
 export default function Register(){
   const [name,setName] = useState('')
@@ -7,34 +7,50 @@ export default function Register(){
   const [password,setPassword] = useState('')
   const [msg,setMsg] = useState('')
 
+  const { register: registerUser, isRegisterLoading, registerError } = useAuth();
+
   async function submit(e){
     e.preventDefault();
     try{
-      const res = await api.post('/auth/register', { name, email, password })
-      localStorage.setItem('token', res.token)
-      setMsg('Registered')
-    }catch(err){ setMsg('Register failed') }
+      registerUser({ name, email, password });
+      setMsg('Registering...');
+    }catch(err){
+      setMsg('Register failed');
+    }
   }
 
   return (
-    <div>
-      <h2>Register</h2>
-      <form onSubmit={submit}>
-        <div>
-          <label>Name</label>
-          <input value={name} onChange={e=>setName(e.target.value)} />
-        </div>
-        <div>
-          <label>Email</label>
-          <input value={email} onChange={e=>setEmail(e.target.value)} />
-        </div>
-        <div>
-          <label>Password</label>
-          <input type="password" value={password} onChange={e=>setPassword(e.target.value)} />
-        </div>
-        <button>Register</button>
-      </form>
-      <p>{msg}</p>
+    <div className="auth-container">
+      <div className="auth-card">
+        <h2>Create an Account</h2>
+
+        {registerError && (
+          <div className="error-message">{registerError.response?.data?.error || 'Registration failed'}</div>
+        )}
+
+        <form onSubmit={submit} className="auth-form">
+          <div className="form-group">
+            <label htmlFor="name">Name</label>
+            <input id="name" value={name} onChange={e=>setName(e.target.value)} />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="email">Email</label>
+            <input id="email" value={email} onChange={e=>setEmail(e.target.value)} />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="password">Password</label>
+            <input id="password" type="password" value={password} onChange={e=>setPassword(e.target.value)} />
+          </div>
+
+          <button type="submit" disabled={isRegisterLoading} className="auth-button">
+            {isRegisterLoading ? 'Creating account...' : 'Register'}
+          </button>
+        </form>
+
+        <p className="auth-link">{msg}</p>
+      </div>
     </div>
   )
 }

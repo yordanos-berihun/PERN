@@ -37,7 +37,7 @@ export const useAuth = () => {
 
   const profileQuery = useQuery({
     queryKey: ['profile'],
-    queryFn: authAPI.getProfile,
+    queryFn: authAPI.getMe,
     enabled: isAuthenticated,
     retry: false,
     onError: () => logout()
@@ -56,7 +56,7 @@ export const useAuth = () => {
     login: loginMutation.mutate,
     register: registerMutation.mutate,
     logout: handleLogout,
-    profile: profileQuery.data?.data?.data,
+    profile: profileQuery.data?.data?.data?.user,
     isLoginLoading: loginMutation.isLoading,
     isRegisterLoading: registerMutation.isLoading,
     loginError: loginMutation.error,

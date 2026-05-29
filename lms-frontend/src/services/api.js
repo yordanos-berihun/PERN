@@ -65,8 +65,7 @@ api.interceptors.response.use(
 export const authAPI = {
   register: (userData) => api.post('/auth/register', userData),
   login: (credentials) => api.post('/auth/login', credentials),
-  getProfile: () => api.get('/auth/profile'),
-  refreshToken: (refreshToken) => api.post('/auth/refresh', { refreshToken })
+  getMe: () => api.get('/auth/me')
 };
 
 // Courses API
