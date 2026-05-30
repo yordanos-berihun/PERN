@@ -2,6 +2,27 @@ const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
 
+const validateCoursePayload = ({ title, description, price, published }) => {
+  if (!title || String(title).trim().length < 3) {
+    return 'Title is required and must be at least 3 characters long.';
+  }
+
+  if (description && String(description).trim().length > 1000) {
+    return 'Description cannot exceed 1000 characters.';
+  }
+
+  const numericPrice = Number(price);
+  if (Number.isNaN(numericPrice) || numericPrice < 0) {
+    return 'Price must be a non-negative number.';
+  }
+
+  if (published !== undefined && typeof published !== 'boolean') {
+    return 'Published must be a boolean value.';
+  }
+
+  return null;
+};
+
 // List all courses with optional pagination
 const getAllCourses = async (req, res) => {
   try {
@@ -96,9 +117,10 @@ const getInstructorCourses = async (req, res) => {
 const createCourse = async (req, res) => {
   try {
     const { title, description, price = 0, published = false } = req.body;
+    const error = validateCoursePayload({ title, description, price, published });
 
-    if (!title || title.trim().length < 3) {
-      return res.status(400).json({ error: 'Title is required (min 3 chars)' });
+    if (error) {
+      return res.status(400).json({ error });
     }
 
     if (req.user.role !== 'INSTRUCTOR' && req.user.role !== 'ADMIN') {
@@ -107,9 +129,9 @@ const createCourse = async (req, res) => {
 
     const course = await prisma.course.create({
       data: {
-        title: title.trim(),
-        description: description || null,
-        price: Number(price) || 0,
+        title: String(title).trim(),
+        description: description ? String(description).trim() : null,
+        price: Number(price),
         published: Boolean(published),
         instructorId: req.userId
       }
@@ -136,13 +158,25 @@ const updateCourse = async (req, res) => {
       return res.status(403).json({ error: 'Not authorized to update this course' });
     }
 
+    const payload = {
+      title: title !== undefined ? title : course.title,
+      description: description !== undefined ? description : course.description,
+      price: price !== undefined ? price : course.price,
+      published: published !== undefined ? published : course.published
+    };
+
+    const error = validateCoursePayload(payload);
+    if (error) {
+      return res.status(400).json({ error });
+    }
+
     const updated = await prisma.course.update({
       where: { id },
       data: {
-        title: title ? title.trim() : course.title,
-        description: description !== undefined ? description : course.description,
-        price: price !== undefined ? Number(price) : course.price,
-        published: published !== undefined ? Boolean(published) : course.published
+        title: String(payload.title).trim(),
+        description: payload.description ? String(payload.description).trim() : null,
+        price: Number(payload.price),
+        published: Boolean(payload.published)
       }
     });
 

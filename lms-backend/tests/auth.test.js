@@ -1,4 +1,5 @@
 const request = require('supertest');
+const jwt = require('jsonwebtoken');
 const { PrismaClient } = require('@prisma/client');
 const app = require('../app');
 
@@ -51,4 +52,28 @@ test('Get profile with valid token', async () => {
 
   expect(response.body).toHaveProperty('success', true);
   expect(response.body.data.user).toMatchObject({ id: userId, email: userEmail });
+});
+
+test('Auth middleware rejects malformed authorization header', async () => {
+  const response = await request(app)
+    .get('/api/auth/me')
+    .set('Authorization', `Token ${token}`)
+    .expect(401);
+
+  expect(response.body).toHaveProperty('error', 'Invalid authorization header format.');
+});
+
+test('Auth middleware rejects expired token', async () => {
+  const expiredToken = jwt.sign(
+    { sub: userId, email: userEmail, role: 'STUDENT' },
+    process.env.JWT_SECRET,
+    { expiresIn: '-1s' }
+  );
+
+  const response = await request(app)
+    .get('/api/auth/me')
+    .set('Authorization', `Bearer ${expiredToken}`)
+    .expect(401);
+
+  expect(response.body).toHaveProperty('error', 'Token expired.');
 });

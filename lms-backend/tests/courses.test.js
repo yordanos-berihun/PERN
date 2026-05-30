@@ -66,6 +66,16 @@ test('Create course without auth returns 401', async () => {
     .expect(401);
 });
 
+test('Create course rejects invalid title', async () => {
+  const response = await request(app)
+    .post('/api/courses')
+    .set('Authorization', `Bearer ${instructorToken}`)
+    .send({ title: 'Hi', description: 'Too short title', price: 9.99, published: true })
+    .expect(400);
+
+  expect(response.body).toHaveProperty('error', 'Title is required and must be at least 3 characters long.');
+});
+
 test('Update course is allowed for owner instructor', async () => {
   const response = await request(app)
     .put(`/api/courses/${courseId}`)
@@ -75,6 +85,16 @@ test('Update course is allowed for owner instructor', async () => {
 
   expect(response.body).toHaveProperty('success', true);
   expect(response.body.data).toHaveProperty('title', 'Test Course 1 Updated');
+});
+
+test('Update course rejects invalid payload', async () => {
+  const response = await request(app)
+    .put(`/api/courses/${courseId}`)
+    .set('Authorization', `Bearer ${instructorToken}`)
+    .send({ price: -5 })
+    .expect(400);
+
+  expect(response.body).toHaveProperty('error', 'Price must be a non-negative number.');
 });
 
 test('Delete course is allowed for owner instructor', async () => {

@@ -10,6 +10,7 @@ export default function ManageCourses() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageMeta, setPageMeta] = useState({ page: 1, limit: PAGE_SIZE, total: 0, totalPages: 1 });
   const [editingCourse, setEditingCourse] = useState(null);
   const [formState, setFormState] = useState({
     title: '',
@@ -18,33 +19,30 @@ export default function ManageCourses() {
     published: true
   });
 
-  useEffect(() => {
-    fetchCourses();
-  }, []);
-
-  const ownedCourses = useMemo(() => {
-    if (!user) return [];
-    return courses.filter((course) => course.instructor?.id === user.id);
-  }, [courses, user]);
-
-  const pageCount = Math.max(Math.ceil(ownedCourses.length / PAGE_SIZE), 1);
-  const paginatedCourses = useMemo(() => {
-    const start = (currentPage - 1) * PAGE_SIZE;
-    return ownedCourses.slice(start, start + PAGE_SIZE);
-  }, [ownedCourses, currentPage]);
-
   const isInstructor = user?.role === 'INSTRUCTOR' || user?.role === 'ADMIN';
 
-  async function fetchCourses() {
+  useEffect(() => {
+    if (isInstructor) {
+      fetchCourses(currentPage);
+    }
+  }, [currentPage, isInstructor]);
+
+  const pageCount = Math.max(pageMeta.totalPages, 1);
+
+  async function fetchCourses(page = 1) {
     setLoading(true);
     setMessage('');
 
     try {
-      const res = await coursesAPI.getAll(1, 100);
+      const res = await coursesAPI.getMine(page, PAGE_SIZE);
       setCourses(res.data.data || []);
+      if (res.data.meta) {
+        setPageMeta(res.data.meta);
+      }
+      setCurrentPage(res.data.meta?.page || page);
     } catch (err) {
       console.error(err);
-      setMessage('Unable to load courses.');
+      setMessage(err.response?.data?.error || 'Unable to load courses.');
     } finally {
       setLoading(false);
     }
