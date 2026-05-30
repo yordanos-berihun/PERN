@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 export default function Dashboard() {
   const { user, profile } = useAuth();
   const displayUser = profile || user;
+  const isInstructor = displayUser?.role === 'INSTRUCTOR' || displayUser?.role === 'ADMIN';
 
   return (
     <div className="dashboard">
@@ -25,9 +26,19 @@ export default function Dashboard() {
 
         <div className="dashboard-card">
           <h3>My Courses</h3>
-          <p>Browse all available courses and enroll in your next class.</p>
-          <Link to="/courses" className="btn-primary">Browse Courses</Link>
+          <p>{isInstructor ? 'Manage your own courses and stay on top of new content.' : 'Browse available courses and find your next class.'}</p>
+          <Link to="/manage-courses" className="btn-primary">Manage Courses</Link>
         </div>
+
+        {isInstructor && (
+          <div className="dashboard-card">
+            <h3>Instructor Controls</h3>
+            <p>Use the courses page to create, edit, or delete the content you own.</p>
+            <div className="quick-actions">
+              <Link to="/courses" className="btn-secondary">Go to Courses</Link>
+            </div>
+          </div>
+        )}
 
         <div className="dashboard-card">
           <h3>Recent Activity</h3>

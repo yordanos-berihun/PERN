@@ -46,6 +46,19 @@ test('Create course is protected and works for instructor role', async () => {
   courseId = response.body.data.id;
 });
 
+test('Instructor can query their own courses', async () => {
+  const response = await request(app)
+    .get('/api/courses/mine')
+    .set('Authorization', `Bearer ${instructorToken}`)
+    .expect(200);
+
+  expect(response.body).toHaveProperty('success', true);
+  expect(Array.isArray(response.body.data)).toBe(true);
+  expect(response.body.meta).toHaveProperty('page', 1);
+  expect(response.body.meta).toHaveProperty('limit', 10);
+  expect(response.body.data.some((course) => course.id === courseId)).toBe(true);
+});
+
 test('Create course without auth returns 401', async () => {
   await request(app)
     .post('/api/courses')

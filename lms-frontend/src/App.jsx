@@ -7,6 +7,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Courses from './pages/Courses';
 import Dashboard from './pages/Dashboard';
+import ManageCourses from './pages/ManageCourses';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,6 +31,9 @@ function AppContent() {
         <div className="nav-links">
           <Link to="/">Home</Link>
           <Link to="/courses">Courses</Link>
+          {user?.role === 'INSTRUCTOR' || user?.role === 'ADMIN' ? (
+            <Link to="/manage-courses">Manage Courses</Link>
+          ) : null}
           
           {isAuthenticated ? (
             <>
@@ -54,7 +58,8 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/courses" element={<Courses />} />
-          <Route 
+        <Route path="/manage-courses" element={<ManageCourses />} />
+        <Route 
             path="/login" 
             element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />} 
           />

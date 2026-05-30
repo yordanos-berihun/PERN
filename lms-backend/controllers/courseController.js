@@ -2,18 +2,37 @@ const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
 
-// List all courses
+// List all courses with optional pagination
 const getAllCourses = async (req, res) => {
   try {
-    const courses = await prisma.course.findMany({
-      include: {
-        instructor: {
-          select: { id: true, name: true, email: true }
-        }
+    const page = Math.max(Number(req.query.page) || 1, 1);
+    const limit = Math.min(Math.max(Number(req.query.limit) || 10, 1), 100);
+    const offset = (page - 1) * limit;
+
+    const [total, courses] = await Promise.all([
+      prisma.course.count(),
+      prisma.course.findMany({
+        skip: offset,
+        take: limit,
+        include: {
+          instructor: {
+            select: { id: true, name: true, email: true }
+          }
+        },
+        orderBy: { createdAt: 'desc' }
+      })
+    ]);
+
+    res.json({
+      success: true,
+      data: courses,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.max(Math.ceil(total / limit), 1)
       }
     });
-
-    res.json({ success: true, data: courses });
   } catch (error) {
     console.error('GetAllCourses error:', error);
     res.status(500).json({ error: 'Failed to fetch courses' });
@@ -35,6 +54,41 @@ const getCourseById = async (req, res) => {
   } catch (error) {
     console.error('GetCourseById error:', error);
     res.status(500).json({ error: 'Failed to fetch course' });
+  }
+};
+
+// Get current instructor's courses
+const getInstructorCourses = async (req, res) => {
+  try {
+    const page = Math.max(Number(req.query.page) || 1, 1);
+    const limit = Math.min(Math.max(Number(req.query.limit) || 10, 1), 100);
+    const offset = (page - 1) * limit;
+
+    const where = { instructorId: req.userId };
+
+    const [total, courses] = await Promise.all([
+      prisma.course.count({ where }),
+      prisma.course.findMany({
+        where,
+        skip: offset,
+        take: limit,
+        orderBy: { createdAt: 'desc' }
+      })
+    ]);
+
+    res.json({
+      success: true,
+      data: courses,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.max(Math.ceil(total / limit), 1)
+      }
+    });
+  } catch (error) {
+    console.error('GetInstructorCourses error:', error);
+    res.status(500).json({ error: 'Failed to fetch instructor courses' });
   }
 };
 

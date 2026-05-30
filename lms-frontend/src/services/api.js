@@ -38,7 +38,7 @@ export const authAPI = {
 
 // Courses API
 export const coursesAPI = {
-  getAll: () => api.get('/courses'),
+  getAll: (page = 1, limit = 10) => api.get('/courses', { params: { page, limit } }),
   getById: (id) => api.get(`/courses/${id}`),
   create: (courseData) => api.post('/courses', courseData),
   update: (id, courseData) => api.put(`/courses/${id}`, courseData),

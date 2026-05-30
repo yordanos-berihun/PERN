@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { authAPI } from '../services/api';
 import useAuthStore from '../store/authStore';
@@ -43,6 +44,15 @@ export const useAuth = () => {
     onError: () => logout()
   });
 
+  useEffect(() => {
+    if (isAuthenticated && !user && profileQuery.data?.data?.user) {
+      setAuth({
+        token: useAuthStore.getState().token,
+        user: profileQuery.data.data.user
+      });
+    }
+  }, [isAuthenticated, user, profileQuery.data, setAuth]);
+
   const handleLogout = () => {
     logout();
     queryClient.clear();
@@ -56,7 +66,7 @@ export const useAuth = () => {
     login: loginMutation.mutate,
     register: registerMutation.mutate,
     logout: handleLogout,
-    profile: profileQuery.data?.data?.data?.user,
+    profile: profileQuery.data?.data?.user,
     isLoginLoading: loginMutation.isLoading,
     isRegisterLoading: registerMutation.isLoading,
     loginError: loginMutation.error,
