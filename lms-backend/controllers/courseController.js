@@ -175,6 +175,7 @@ const deleteCourse = async (req, res) => {
 module.exports = {
   getAllCourses,
   getCourseById,
+  getInstructorCourses,
   createCourse,
   updateCourse,
   deleteCourse

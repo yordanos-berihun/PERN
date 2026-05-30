@@ -5,10 +5,22 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 // Generate JWT token
-const generateToken = (userId) => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '7d'
-  });
+const generateToken = (user) => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is not configured');
+  }
+
+  return jwt.sign(
+    {
+      sub: user.id,
+      email: user.email,
+      role: user.role
+    },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: process.env.JWT_EXPIRES_IN || '7d'
+    }
+  );
 };
 
 // Validation helpers
@@ -25,13 +37,15 @@ const validatePassword = (password) => {
 const register = async (req, res) => {
   try {
     const { name, email, password, role = 'STUDENT' } = req.body;
+    const normalizedEmail = email?.toLowerCase().trim();
+    const normalizedRole = String(role || 'STUDENT').toUpperCase();
 
     // Validation
     if (!name || name.trim().length < 2) {
       return res.status(400).json({ error: 'Name must be at least 2 characters long' });
     }
 
-    if (!email || !validateEmail(email)) {
+    if (!normalizedEmail || !validateEmail(normalizedEmail)) {
       return res.status(400).json({ error: 'Please provide a valid email address' });
     }
 
@@ -39,9 +53,13 @@ const register = async (req, res) => {
       return res.status(400).json({ error: 'Password must be at least 6 characters long' });
     }
 
+    if (!['STUDENT', 'INSTRUCTOR'].includes(normalizedRole)) {
+      return res.status(400).json({ error: 'Invalid role specified' });
+    }
+
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() }
+      where: { email: normalizedEmail }
     });
 
     if (existingUser) {
@@ -55,14 +73,14 @@ const register = async (req, res) => {
     const user = await prisma.user.create({
       data: {
         name: name.trim(),
-        email: email.toLowerCase(),
+        email: normalizedEmail,
         password: hashedPassword,
-        role
+        role: normalizedRole
       }
     });
 
     // Generate token
-    const token = generateToken(user.id);
+    const token = generateToken(user);
 
     res.status(201).json({
       success: true,
@@ -86,7 +104,8 @@ const register = async (req, res) => {
 // Login user
 const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const email = req.body.email?.toLowerCase().trim();
+    const password = req.body.password;
 
     // Validation
     if (!email || !validateEmail(email)) {
@@ -99,7 +118,7 @@ const login = async (req, res) => {
 
     // Find user
     const user = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() }
+      where: { email }
     });
 
     if (!user) {
@@ -114,7 +133,7 @@ const login = async (req, res) => {
     }
 
     // Generate token
-    const token = generateToken(user.id);
+    const token = generateToken(user);
 
     res.json({
       success: true,
@@ -138,7 +157,7 @@ const login = async (req, res) => {
 // Get current user
 const getMe = async (req, res) => {
   try {
-    const user = await prisma.user.findUnique({
+        const user = await prisma.user.findUnique({
       where: { id: req.userId },
       select: {
         id: true,
@@ -148,6 +167,10 @@ const getMe = async (req, res) => {
         createdAt: true
       }
     });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
 
     res.json({ 
       success: true,
