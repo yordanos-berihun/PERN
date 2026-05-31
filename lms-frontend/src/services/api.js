@@ -43,7 +43,9 @@ export const coursesAPI = {
   getById: (id) => api.get(`/courses/${id}`),
   create: (courseData) => api.post('/courses', courseData),
   update: (id, courseData) => api.put(`/courses/${id}`, courseData),
-  delete: (id) => api.delete(`/courses/${id}`)
+  delete: (id) => api.delete(`/courses/${id}`),
+  enroll: (id) => api.post(`/courses/${id}/enroll`),
+  getEnrolled: (page = 1, limit = 10) => api.get('/courses/enrolled', { params: { page, limit } })
 };
 
 export default api;

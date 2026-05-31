@@ -121,6 +121,25 @@ export default function Courses() {
     }
   }
 
+  async function handleEnrollCourse(courseId) {
+    if (!user) {
+      setMessage('You must be logged in to enroll.');
+      return;
+    }
+
+    setLoading(true);
+    setMessage('');
+    try {
+      await coursesAPI.enroll(courseId);
+      setMessage('Enrolled successfully.');
+    } catch (err) {
+      console.error(err);
+      setMessage(err.response?.data?.error || 'Unable to enroll.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="courses-page">
       <div className="courses-header">
@@ -214,6 +233,11 @@ export default function Courses() {
                         Delete
                       </button>
                     </>
+                  )}
+                  {!isOwner && user && (
+                    <button className="btn-primary" onClick={() => handleEnrollCourse(course.id)} disabled={loading}>
+                      Enroll
+                    </button>
                   )}
                 </div>
               </div>

@@ -206,11 +206,83 @@ const deleteCourse = async (req, res) => {
   }
 };
 
+  // Enroll the current user in a course
+  const enrollCourse = async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      // Only logged-in users can enroll (role check can be adjusted)
+      if (!req.user || !req.user.role) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const course = await prisma.course.findUnique({ where: { id } });
+      if (!course) return res.status(404).json({ error: 'Course not found' });
+
+      // Prevent enrolling twice
+      const existing = await prisma.enrollment.findFirst({ where: { userId: req.userId, courseId: id } });
+      if (existing) return res.status(400).json({ error: 'Already enrolled in this course' });
+
+      const enrollment = await prisma.enrollment.create({
+        data: { userId: req.userId, courseId: id }
+      });
+
+      res.status(201).json({ success: true, data: enrollment });
+    } catch (error) {
+      console.error('EnrollCourse error:', error);
+      // Prisma unique constraint would also error here; map to user-friendly message
+      if (error.code === 'P2002') {
+        return res.status(400).json({ error: 'Already enrolled in this course' });
+      }
+      res.status(500).json({ error: 'Failed to enroll in course' });
+    }
+  };
+
+  // Get current user's enrolled courses
+  const getEnrolledCourses = async (req, res) => {
+    try {
+      const page = Math.max(Number(req.query.page) || 1, 1);
+      const limit = Math.min(Math.max(Number(req.query.limit) || 10, 1), 100);
+      const offset = (page - 1) * limit;
+
+      const where = { userId: req.userId };
+
+      const [total, enrollments] = await Promise.all([
+        prisma.enrollment.count({ where }),
+        prisma.enrollment.findMany({
+          where,
+          skip: offset,
+          take: limit,
+          include: { course: { include: { instructor: { select: { id: true, name: true, email: true } } } } },
+          orderBy: { enrolledAt: 'desc' }
+        })
+      ]);
+
+      const courses = enrollments.map((e) => e.course);
+
+      res.json({
+        success: true,
+        data: courses,
+        meta: {
+          page,
+          limit,
+          total,
+          totalPages: Math.max(Math.ceil(total / limit), 1)
+        }
+      });
+    } catch (error) {
+      console.error('GetEnrolledCourses error:', error);
+      res.status(500).json({ error: 'Failed to fetch enrolled courses' });
+    }
+  };
+
 module.exports = {
   getAllCourses,
   getCourseById,
   getInstructorCourses,
   createCourse,
   updateCourse,
-  deleteCourse
+  deleteCourse,
+  enrollCourse,
+  getEnrolledCourses
 };

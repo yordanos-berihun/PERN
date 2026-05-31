@@ -103,3 +103,38 @@ test('Delete course is allowed for owner instructor', async () => {
     .set('Authorization', `Bearer ${instructorToken}`)
     .expect(200);
 });
+
+test('Student can enroll and list enrolled courses', async () => {
+  // register a student
+  const studentEmail = randomEmail();
+  const reg = await request(app)
+    .post('/api/auth/register')
+    .send({ name: 'Student Test', email: studentEmail, password: 'studentpass', role: 'STUDENT' })
+    .expect(201);
+
+  const studentToken = reg.body.data.token;
+
+  // create another course to enroll in
+  const courseRes = await request(app)
+    .post('/api/courses')
+    .set('Authorization', `Bearer ${instructorToken}`)
+    .send({ title: 'Enroll Course', description: 'For enrollment', price: 5, published: true })
+    .expect(201);
+
+  const enrollCourseId = courseRes.body.data.id;
+
+  // enroll student
+  await request(app)
+    .post(`/api/courses/${enrollCourseId}/enroll`)
+    .set('Authorization', `Bearer ${studentToken}`)
+    .expect(201);
+
+  // list enrolled
+  const listRes = await request(app)
+    .get('/api/courses/enrolled')
+    .set('Authorization', `Bearer ${studentToken}`)
+    .expect(200);
+
+  expect(Array.isArray(listRes.body.data)).toBe(true);
+  expect(listRes.body.data.some((c) => c.id === enrollCourseId)).toBe(true);
+});

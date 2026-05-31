@@ -8,13 +8,17 @@ const {
   deleteCourse
 } = require('../controllers/courseController');
 
+const { enrollCourse, getEnrolledCourses } = require('../controllers/courseController');
+
 // Public
 router.get('/', getAllCourses);
 router.get('/mine', auth, getInstructorCourses);
+router.get('/enrolled', auth, getEnrolledCourses);
 router.get('/:id', getCourseById);
 
 // Protected
 router.post('/', auth, createCourse);
+router.post('/:id/enroll', auth, enrollCourse);
 router.put('/:id', auth, updateCourse);
 router.delete('/:id', auth, deleteCourse);
 
