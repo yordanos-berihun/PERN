@@ -342,10 +342,16 @@ body {
 
 .courses-header {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 1.5rem;
+}
+
+.courses-header h2,
+.manage-courses-header h2,
+.my-enrollments-page h2 {
+  margin-bottom: 0.25rem;
 }
 
 .courses-header h2,
@@ -397,6 +403,36 @@ body {
   box-shadow: 0 10px 25px rgba(15, 23, 42, 0.06);
 }
 
+.course-form-card:hover,
+.course-table-card:hover,
+.card:hover {
+  transform: translateY(-2px);
+}
+
+.course-form-card {
+  margin-bottom: 1.75rem;
+}
+
+.manage-section {
+  display: grid;
+  grid-template-columns: minmax(320px, 380px) minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.course-table-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.course-table-card .courses-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
 .card:hover,
 .course-form-card:hover,
 .course-table-card:hover {
@@ -416,6 +452,27 @@ body {
 .course-detail-card h2 {
   font-size: 1.25rem;
   margin: 0;
+}
+
+.course-card-header h3 a {
+  color: #111827;
+  text-decoration: none;
+}
+
+.course-card-header h3 a:hover {
+  color: #2563eb;
+}
+
+.course-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.course-actions button,
+.course-actions a {
+  min-width: 120px;
 }
 
 .course-card-header a {
