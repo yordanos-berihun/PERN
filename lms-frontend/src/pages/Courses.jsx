@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { coursesAPI } from '../services/api';
 import useAuthStore from '../store/authStore';
 
@@ -215,7 +216,9 @@ export default function Courses() {
             return (
               <div className="card" key={course.id}>
                 <div className="course-card-header">
-                  <h3>{course.title}</h3>
+                  <h3>
+                    <Link to={`/courses/${course.id}`}>{course.title}</Link>
+                  </h3>
                   {isOwner && <span className="badge">Your course</span>}
                 </div>
                 <p>{course.description || 'No description yet.'}</p>
