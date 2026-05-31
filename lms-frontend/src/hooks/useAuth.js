@@ -44,6 +44,23 @@ export const useAuth = () => {
     onError: () => logout()
   });
 
+  const updateProfileMutation = useMutation({
+    mutationFn: authAPI.updateProfile,
+    onMutate: () => setLoading(true),
+    onSuccess: (response) => {
+      const updatedUser = response.data.data.user;
+      setAuth({
+        token: useAuthStore.getState().token,
+        user: updatedUser
+      });
+      queryClient.setQueryData(['profile'], response.data);
+    },
+    onError: (error) => {
+      console.error('Profile update failed:', error.response?.data?.error);
+    },
+    onSettled: () => setLoading(false)
+  });
+
   useEffect(() => {
     if (isAuthenticated && !user && profileQuery.data?.data?.user) {
       setAuth({
@@ -67,6 +84,9 @@ export const useAuth = () => {
     register: registerMutation.mutate,
     logout: handleLogout,
     profile: profileQuery.data?.data?.user,
+    updateProfile: updateProfileMutation.mutateAsync,
+    isUpdateProfileLoading: updateProfileMutation.isLoading,
+    updateProfileError: updateProfileMutation.error,
     isLoginLoading: loginMutation.isLoading,
     isRegisterLoading: registerMutation.isLoading,
     loginError: loginMutation.error,

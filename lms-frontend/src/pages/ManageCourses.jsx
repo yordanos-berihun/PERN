@@ -3,10 +3,13 @@ import { useAuth } from '../hooks/useAuth';
 import { coursesAPI } from '../services/api';
 
 const PAGE_SIZE = 5;
+const DEBOUNCE_MS = 400;
 
 export default function ManageCourses() {
   const { user, isAuthenticated } = useAuth();
   const [courses, setCourses] = useState([]);
+  const [searchInput, setSearchInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -26,6 +29,26 @@ export default function ManageCourses() {
       fetchCourses(currentPage);
     }
   }, [currentPage, isInstructor]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(searchInput.trim());
+    }, DEBOUNCE_MS);
+
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  const filteredCourses = useMemo(() => {
+    if (!searchQuery) return courses;
+
+    const query = searchQuery.toLowerCase();
+    return courses.filter((course) => {
+      return (
+        course.title?.toLowerCase().includes(query) ||
+        course.description?.toLowerCase().includes(query)
+      );
+    });
+  }, [courses, searchQuery]);
 
   const pageCount = Math.max(pageMeta.totalPages, 1);
 
@@ -203,11 +226,20 @@ export default function ManageCourses() {
 
         <div className="course-table-card">
           <h3>My Courses</h3>
+          <div className="courses-controls">
+            <input
+              type="search"
+              placeholder="Search your courses"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+            />
+            <span className="search-note">Search updates after a short delay.</span>
+          </div>
           {loading && <p>Loading courses...</p>}
-          {!loading && paginatedCourses.length === 0 && <p>No courses found.</p>}
+          {!loading && filteredCourses.length === 0 && <p>No courses found.</p>}
 
           <div className="courses-grid">
-            {paginatedCourses.map((course) => (
+            {filteredCourses.map((course) => (
               <div className="card" key={course.id}>
                 <div className="course-card-header">
                   <h3>{course.title}</h3>

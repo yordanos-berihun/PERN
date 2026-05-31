@@ -28,11 +28,22 @@ const getAllCourses = async (req, res) => {
   try {
     const page = Math.max(Number(req.query.page) || 1, 1);
     const limit = Math.min(Math.max(Number(req.query.limit) || 10, 1), 100);
+    const q = typeof req.query.q === 'string' && req.query.q.trim() ? req.query.q.trim() : null;
     const offset = (page - 1) * limit;
 
+    const where = q
+      ? {
+          OR: [
+            { title: { contains: q, mode: 'insensitive' } },
+            { description: { contains: q, mode: 'insensitive' } }
+          ]
+        }
+      : {};
+
     const [total, courses] = await Promise.all([
-      prisma.course.count(),
+      prisma.course.count({ where }),
       prisma.course.findMany({
+        where,
         skip: offset,
         take: limit,
         include: {

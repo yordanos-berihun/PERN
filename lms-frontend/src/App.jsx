@@ -10,6 +10,7 @@ import CourseDetail from './pages/CourseDetail';
 import Dashboard from './pages/Dashboard';
 import ManageCourses from './pages/ManageCourses';
 import MyEnrollments from './pages/MyEnrollments';
+import Profile from './pages/Profile';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,6 +40,7 @@ function AppContent() {
           
           {isAuthenticated ? (
             <>
+              <Link to="/profile">Profile</Link>
               {user?.role === 'STUDENT' && <Link to="/enrollments">My Enrollments</Link>}
               <Link to="/dashboard">Dashboard</Link>
               <div className="user-menu">
@@ -75,6 +77,10 @@ function AppContent() {
           <Route 
             path="/dashboard" 
             element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/profile" 
+            element={isAuthenticated ? <Profile /> : <Navigate to="/login" />} 
           />
         </Routes>
       </main>

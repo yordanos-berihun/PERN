@@ -49,7 +49,7 @@ export default function Dashboard() {
           <h3>Quick Actions</h3>
           <div className="quick-actions">
             <Link to="/courses" className="btn-secondary">View All Courses</Link>
-            <button className="btn-secondary" disabled>Update Profile</button>
+            <Link to="/profile" className="btn-secondary">Update Profile</Link>
             <button className="btn-secondary" disabled>Settings</button>
           </div>
         </div>

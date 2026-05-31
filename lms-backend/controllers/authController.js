@@ -157,7 +157,7 @@ const login = async (req, res) => {
 // Get current user
 const getMe = async (req, res) => {
   try {
-        const user = await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: req.userId },
       select: {
         id: true,
@@ -184,8 +184,94 @@ const getMe = async (req, res) => {
   }
 };
 
+// Update current user profile
+const updateMe = async (req, res) => {
+  try {
+    const { name, email, password, currentPassword } = req.body;
+    const normalizedEmail = email?.toLowerCase().trim();
+    const updateData = {};
+
+    if (name) {
+      if (name.trim().length < 2) {
+        return res.status(400).json({ error: 'Name must be at least 2 characters long' });
+      }
+      updateData.name = name.trim();
+    }
+
+    if (normalizedEmail) {
+      if (!validateEmail(normalizedEmail)) {
+        return res.status(400).json({ error: 'Please provide a valid email address' });
+      }
+
+      const existingUser = await prisma.user.findUnique({
+        where: { email: normalizedEmail }
+      });
+
+      if (existingUser && existingUser.id !== req.userId) {
+        return res.status(400).json({ error: 'Email address is already in use' });
+      }
+
+      updateData.email = normalizedEmail;
+    }
+
+    if (password) {
+      if (!validatePassword(password)) {
+        return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+      }
+
+      if (!currentPassword) {
+        return res.status(400).json({ error: 'Current password is required to change your password' });
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { id: req.userId }
+      });
+
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+
+      if (!isValidPassword) {
+        return res.status(401).json({ error: 'Current password is incorrect' });
+      }
+
+      updateData.password = await bcrypt.hash(password, 12);
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ error: 'No valid profile updates were provided' });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: req.userId },
+      data: updateData,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        createdAt: true
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'Profile updated successfully',
+      data: {
+        user: updatedUser
+      }
+    });
+  } catch (error) {
+    console.error('UpdateMe error:', error);
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
+};
+
 module.exports = {
   register,
   login,
-  getMe
+  getMe,
+  updateMe
 };
