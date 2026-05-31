@@ -10,4 +10,4 @@ services:
     ports:
       - 3000:3000
       - 9229:9229
-    command: ["node", "--inspect=0.0.0.0:9229", "server.js"]
+    command: ["sh", "-c", "npx prisma migrate deploy && if [ \"$SEED_ON_STARTUP\" = \"true\" ]; then node prisma/seed.js; fi && node --inspect=0.0.0.0:9229 server.js"]

@@ -14,4 +14,4 @@ COPY --from=builder /app .
 ENV NODE_ENV=production
 EXPOSE 5000
 
-CMD ["node", "server.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && if [ \"$SEED_ON_STARTUP\" = \"true\" ]; then node prisma/seed.js; fi && node server.js"]
