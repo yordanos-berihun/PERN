@@ -54,6 +54,43 @@ test('Get profile with valid token', async () => {
   expect(response.body.data.user).toMatchObject({ id: userId, email: userEmail });
 });
 
+test('Update profile name and email successfully', async () => {
+  const newEmail = randomEmail();
+  const response = await request(app)
+    .put('/api/auth/me')
+    .set('Authorization', `Bearer ${token}`)
+    .send({ name: 'Updated User', email: newEmail })
+    .expect(200);
+
+  expect(response.body).toHaveProperty('success', true);
+  expect(response.body.data.user).toMatchObject({ name: 'Updated User', email: newEmail });
+});
+
+test('Update password requires current password', async () => {
+  const response = await request(app)
+    .put('/api/auth/me')
+    .set('Authorization', `Bearer ${token}`)
+    .send({ password: 'newpassword123' })
+    .expect(400);
+
+  expect(response.body).toHaveProperty('error', 'Current password is required to change your password');
+});
+
+test('Update password with wrong current password fails', async () => {
+  await request(app)
+    .put('/api/auth/me')
+    .set('Authorization', `Bearer ${token}`)
+    .send({ currentPassword: 'wrongpass', password: 'newpassword123' })
+    .expect(401);
+});
+
+test('Update profile without auth returns 401', async () => {
+  await request(app)
+    .put('/api/auth/me')
+    .send({ name: 'No Auth' })
+    .expect(401);
+});
+
 test('Auth middleware rejects malformed authorization header', async () => {
   const response = await request(app)
     .get('/api/auth/me')

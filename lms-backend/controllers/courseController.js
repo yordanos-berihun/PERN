@@ -77,12 +77,27 @@ const getCourseById = async (req, res) => {
     const { id } = req.params;
     const course = await prisma.course.findUnique({
       where: { id },
-      include: { instructor: { select: { id: true, name: true, email: true } } }
+      include: {
+        instructor: { select: { id: true, name: true, email: true } },
+        _count: { select: { enrollments: true } }
+      }
     });
 
     if (!course) return res.status(404).json({ error: 'Course not found' });
 
-    res.json({ success: true, data: course });
+    const result = {
+      ...course,
+      enrollmentCount: course._count?.enrollments ?? 0
+    };
+
+    if (req.userId) {
+      const existingEnrollment = await prisma.enrollment.findFirst({
+        where: { userId: req.userId, courseId: id }
+      });
+      result.enrolled = Boolean(existingEnrollment);
+    }
+
+    res.json({ success: true, data: result });
   } catch (error) {
     console.error('GetCourseById error:', error);
     res.status(500).json({ error: 'Failed to fetch course' });
@@ -92,6 +107,10 @@ const getCourseById = async (req, res) => {
 // Get current instructor's courses
 const getInstructorCourses = async (req, res) => {
   try {
+    if (req.user.role !== 'INSTRUCTOR' && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Not authorized to view instructor courses.' });
+    }
+
     const page = Math.max(Number(req.query.page) || 1, 1);
     const limit = Math.min(Math.max(Number(req.query.limit) || 10, 1), 100);
     const offset = (page - 1) * limit;
@@ -229,6 +248,10 @@ const deleteCourse = async (req, res) => {
 
       const course = await prisma.course.findUnique({ where: { id } });
       if (!course) return res.status(404).json({ error: 'Course not found' });
+
+      if (course.instructorId === req.userId) {
+        return res.status(403).json({ error: 'Instructors cannot enroll in their own course.' });
+      }
 
       // Prevent enrolling twice
       const existing = await prisma.enrollment.findFirst({ where: { userId: req.userId, courseId: id } });

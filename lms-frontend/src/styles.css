@@ -310,6 +310,114 @@ body {
   font-weight: 600;
 }
 
+.course-detail-page {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.back-link {
+  margin-bottom: 1rem;
+}
+
+.course-detail-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.course-detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.course-detail-card h2 {
+  margin-bottom: 0.5rem;
+  font-size: 2rem;
+  color: #111827;
+}
+
+.course-description {
+  margin: 1.25rem 0;
+  line-height: 1.8;
+  color: #4b5563;
+}
+
+.course-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  color: #475569;
+  margin-bottom: 1.5rem;
+}
+
+.course-meta span {
+  background: #f8fafc;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+}
+
+.course-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #334155;
+  background: #e2e8f0;
+}
+
+.badge.success {
+  color: #065f46;
+  background: #d1fae5;
+}
+
+.badge.muted {
+  color: #475569;
+  background: #f8fafc;
+}
+
+.badge-pill {
+  padding: 0.5rem 0.85rem;
+}
+
+.status-message {
+  margin-bottom: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 0.5rem;
+  border: 1px solid transparent;
+  color: #0f172a;
+}
+
+.status-message.success {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+}
+
+.status-message.error {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.status-message.info {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .navbar {

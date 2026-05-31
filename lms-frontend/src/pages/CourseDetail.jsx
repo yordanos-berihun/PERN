@@ -7,8 +7,10 @@ export default function CourseDetail() {
   const { id } = useParams();
   const { user, isAuthenticated } = useAuth();
   const [course, setCourse] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(false);
+  const [enrolling, setEnrolling] = useState(false);
   const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState('');
 
   useEffect(() => {
     fetchCourse();
@@ -16,39 +18,46 @@ export default function CourseDetail() {
   }, [id]);
 
   async function fetchCourse() {
-    setLoading(true);
+    setFetching(true);
     setMessage('');
+    setMessageType('');
     try {
       const res = await coursesAPI.getById(id);
       setCourse(res.data.data);
     } catch (err) {
       console.error(err);
       setMessage(err.response?.data?.error || 'Failed to load course.');
+      setMessageType('error');
     } finally {
-      setLoading(false);
+      setFetching(false);
     }
   }
 
   async function handleEnroll() {
     if (!isAuthenticated) {
-      setMessage('You must be logged in to enroll.');
+      setMessage('Please log in to enroll in this course.');
+      setMessageType('info');
       return;
     }
 
-    setLoading(true);
+    setEnrolling(true);
     setMessage('');
+    setMessageType('');
     try {
       await coursesAPI.enroll(id);
-      setMessage('Enrolled successfully.');
+      setCourse((prev) => (prev ? { ...prev, enrolled: true } : prev));
+      setMessage('You are now enrolled!');
+      setMessageType('success');
     } catch (err) {
       console.error(err);
       setMessage(err.response?.data?.error || 'Unable to enroll.');
+      setMessageType('error');
     } finally {
-      setLoading(false);
+      setEnrolling(false);
     }
   }
 
-  if (loading && !course) return <p>Loading course...</p>;
+  if (fetching && !course) return <p>Loading course details...</p>;
 
   return (
     <div className="course-detail-page">
@@ -56,26 +65,56 @@ export default function CourseDetail() {
         <Link to="/courses">← Back to courses</Link>
       </div>
 
-      {message && <div className="status-message">{message}</div>}
+      {message && (
+        <div className={`status-message ${messageType}`}>{message}</div>
+      )}
 
       {!course ? (
         <p>Course not found.</p>
       ) : (
         <div className="course-detail-card">
-          <h2>{course.title}</h2>
-          <p>{course.description || 'No description available.'}</p>
+          <div className="course-detail-header">
+            <div>
+              <h2>{course.title}</h2>
+              <p className="muted-note">Created {new Date(course.createdAt).toLocaleDateString()}</p>
+            </div>
+            {course.published ? (
+              <span className="badge badge-pill success">Published</span>
+            ) : (
+              <span className="badge badge-pill muted">Draft</span>
+            )}
+          </div>
+
+          <p className="course-description">{course.description || 'No description available.'}</p>
+
           <div className="course-meta">
             <span>Instructor: {course.instructor?.name || course.instructor?.email}</span>
             <span>Price: ${course.price?.toFixed(2) ?? '0.00'}</span>
+            <span>{course.enrollmentCount ?? 0} students enrolled</span>
           </div>
 
           <div className="course-actions">
             {user?.id === course.instructor?.id ? (
               <span className="badge">Your course</span>
-            ) : (
-              <button className="btn-primary" onClick={handleEnroll} disabled={loading}>
-                {loading ? 'Processing...' : 'Enroll'}
+            ) : course.enrolled ? (
+              <>
+                <span className="badge success">Already enrolled</span>
+                <Link to="/enrollments" className="btn-secondary">
+                  View my enrollments
+                </Link>
+              </>
+            ) : isAuthenticated ? (
+              <button
+                className="btn-primary"
+                onClick={handleEnroll}
+                disabled={enrolling}
+              >
+                {enrolling ? 'Processing...' : 'Enroll now'}
               </button>
+            ) : (
+              <Link to="/login" className="btn-primary">
+                Login to enroll
+              </Link>
             )}
           </div>
         </div>
