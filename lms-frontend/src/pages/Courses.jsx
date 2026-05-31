@@ -179,8 +179,11 @@ export default function Courses() {
   return (
     <div className="courses-page">
       <div className="courses-header">
-        <h2>Courses</h2>
-        <p>Browse available courses below. Instructors can add and manage their own courses.</p>
+        <div>
+          <h2>Courses</h2>
+          <p>Browse available courses below. Instructors can add and manage their own courses.</p>
+        </div>
+        <div className="page-summary">{pageMeta.total ?? 0} courses available</div>
       </div>
       <div className="courses-controls">
         <div className="search-control">

@@ -10,4 +10,10 @@ npm install
 npm run dev
 ```
 
-Set backend base URL with `VITE_API_BASE` env var.
+Set the backend base URL with the `VITE_API_URL` environment variable:
+
+```bash
+export VITE_API_URL=http://localhost:5000/api
+```
+
+Then open the development URL shown by Vite.
