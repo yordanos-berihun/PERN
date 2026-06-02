@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { coursesAPI } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
+import CourseCard from '../components/CourseCard';
 
 export default function MyEnrollments() {
   const { isAuthenticated } = useAuth();
@@ -43,17 +44,12 @@ export default function MyEnrollments() {
       {!loading && courses.length === 0 && <p>No enrollments found.</p>}
       <div className="courses-grid">
         {courses.map((course) => (
-          <div className="card" key={course.id}>
-            <div className="course-card-header">
-              <h3>{course.title}</h3>
-              <span className="badge">{course.published ? 'Published' : 'Draft'}</span>
-            </div>
-            <p>{course.description || 'No description yet.'}</p>
-            <div className="course-meta">
-              <span>Instructor: {course.instructor?.name || course.instructor?.email}</span>
-              <span>Price: ${course.price?.toFixed(2) ?? '0.00'}</span>
-            </div>
-          </div>
+          <CourseCard
+            key={course.id}
+            course={course}
+            variant="enrollment"
+            loading={loading}
+          />
         ))}
       </div>
     </div>

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { coursesAPI } from '../services/api';
+import CourseCard from '../components/CourseCard';
 
 const PAGE_SIZE = 5;
 const DEBOUNCE_MS = 400;
@@ -240,24 +241,14 @@ export default function ManageCourses() {
 
           <div className="courses-grid">
             {filteredCourses.map((course) => (
-              <div className="card" key={course.id}>
-                <div className="course-card-header">
-                  <h3>{course.title}</h3>
-                  <span className="badge">{course.published ? 'Published' : 'Draft'}</span>
-                </div>
-                <p>{course.description || 'No description available.'}</p>
-                <div className="course-meta">
-                  <span>Price: ${course.price?.toFixed(2) ?? '0.00'}</span>
-                </div>
-                <div className="course-actions">
-                  <button className="btn-secondary" onClick={() => startEdit(course)} disabled={loading}>
-                    Edit
-                  </button>
-                  <button className="btn-danger" onClick={() => handleDelete(course.id)} disabled={loading}>
-                    Delete
-                  </button>
-                </div>
-              </div>
+              <CourseCard
+                key={course.id}
+                course={course}
+                variant="manage"
+                onEdit={startEdit}
+                onDelete={handleDelete}
+                loading={loading}
+              />
             ))}
           </div>
 

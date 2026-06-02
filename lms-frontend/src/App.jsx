@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Courses from './pages/Courses';
+import CourseDetail from './pages/CourseDetail';
 import Dashboard from './pages/Dashboard';
 import ManageCourses from './pages/ManageCourses';
 import MyEnrollments from './pages/MyEnrollments';
@@ -60,6 +61,7 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/courses" element={<Courses />} />
+          <Route path="/courses/:id" element={<CourseDetail />} />
         <Route path="/manage-courses" element={<ManageCourses />} />
           <Route path="/enrollments" element={<MyEnrollments />} />
         <Route 

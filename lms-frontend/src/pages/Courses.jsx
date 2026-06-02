@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { coursesAPI } from '../services/api';
 import useAuthStore from '../store/authStore';
+import CourseCard from '../components/CourseCard';
 
 export default function Courses() {
   const [courses, setCourses] = useState([]);
@@ -213,34 +214,16 @@ export default function Courses() {
           {courses.map((course) => {
             const isOwner = course.instructor?.id === user?.id;
             return (
-              <div className="card" key={course.id}>
-                <div className="course-card-header">
-                  <h3>{course.title}</h3>
-                  {isOwner && <span className="badge">Your course</span>}
-                </div>
-                <p>{course.description || 'No description yet.'}</p>
-                <div className="course-meta">
-                  <span>Instructor: {course.instructor?.name || course.instructor?.email}</span>
-                  <span>Price: ${course.price?.toFixed(2) ?? '0.00'}</span>
-                </div>
-                <div className="course-actions">
-                  {isOwner && (
-                    <>
-                      <button className="btn-secondary" onClick={() => startEdit(course)} disabled={loading}>
-                        Edit
-                      </button>
-                      <button className="btn-danger" onClick={() => handleDeleteCourse(course.id)} disabled={loading}>
-                        Delete
-                      </button>
-                    </>
-                  )}
-                  {!isOwner && user && (
-                    <button className="btn-primary" onClick={() => handleEnrollCourse(course.id)} disabled={loading}>
-                      Enroll
-                    </button>
-                  )}
-                </div>
-              </div>
+              <CourseCard
+                key={course.id}
+                course={course}
+                variant="browse"
+                isOwner={isOwner}
+                onEdit={startEdit}
+                onDelete={handleDeleteCourse}
+                onEnroll={handleEnrollCourse}
+                loading={loading}
+              />
             );
           })}
         </div>
