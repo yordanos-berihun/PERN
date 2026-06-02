@@ -141,14 +141,23 @@ export default function Courses() {
     }
   }
 
+  const isSuccess = message.toLowerCase().includes('success');
+  const isError = message && !isSuccess;
+
   return (
     <div className="courses-page">
       <div className="courses-header">
-        <h2>Courses</h2>
-        <p>Browse available courses below. Instructors can add and manage their own courses.</p>
+        <div>
+          <h2>Courses</h2>
+          <p>Browse available courses below. Instructors can add and manage their own courses.</p>
+        </div>
       </div>
 
-      {message && <div className="status-message">{message}</div>}
+      {message && (
+        <div className={`status-message ${isSuccess ? 'success' : isError ? 'error' : ''}`}>
+          {message}
+        </div>
+      )}
 
       {isInstructor && (
         <div className="course-form-card">

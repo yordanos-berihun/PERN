@@ -20,68 +20,44 @@ export default function CourseCard({
   onEnroll,
   loading = false
 }) {
+  const price = course.price?.toFixed(2) ?? '0.00';
+  const instructor = course.instructor?.name || course.instructor?.email;
+
   return (
-    <div className="card">
-      <div className="course-card-header">
-        <Link to={`/courses/${course.id}`} className="course-title-link">
-          <h3>{course.title}</h3>
-        </Link>
-        {variant === 'browse' && isOwner && <span className="badge">Your course</span>}
-        {variant === 'manage' && <span className="badge">{course.published ? 'Published' : 'Draft'}</span>}
-        {variant === 'enrollment' && <span className="badge">{course.published ? 'Published' : 'Draft'}</span>}
-      </div>
+    <div className="card course-card">
+      <div className="course-card-accent" />
+      <div className="course-card-body">
+        <div className="course-card-header">
+          <Link to={`/courses/${course.id}`} className="course-title-link">
+            <h3>{course.title}</h3>
+          </Link>
+          {variant === 'browse' && isOwner && <span className="badge badge-owner">Yours</span>}
+          {(variant === 'manage' || variant === 'enrollment') && (
+            <span className={`badge ${course.published ? 'badge-published' : 'badge-draft'}`}>
+              {course.published ? 'Published' : 'Draft'}
+            </span>
+          )}
+        </div>
 
-      <p>{course.description || 'No description available.'}</p>
+        <p className="course-card-desc">{course.description || 'No description available.'}</p>
 
-      <div className="course-meta">
-        {variant === 'browse' && (
-          <>
-            <span>Instructor: {course.instructor?.name || course.instructor?.email}</span>
-            <span>Price: ${course.price?.toFixed(2) ?? '0.00'}</span>
-          </>
-        )}
-        {variant === 'manage' && (
-          <span>Price: ${course.price?.toFixed(2) ?? '0.00'}</span>
-        )}
-        {variant === 'enrollment' && (
-          <>
-            <span>Instructor: {course.instructor?.name || course.instructor?.email}</span>
-            <span>Price: ${course.price?.toFixed(2) ?? '0.00'}</span>
-          </>
-        )}
-      </div>
+        <div className="course-meta">
+          {variant !== 'manage' && instructor && <span>👤 {instructor}</span>}
+          <span>{Number(price) === 0 ? 'Free' : `$${price}`}</span>
+        </div>
 
-      <div className="course-actions">
-        {variant === 'browse' && isOwner && (
-          <>
-            <button className="btn-secondary" onClick={() => onEdit?.(course)} disabled={loading}>
-              Edit
-            </button>
-            <button className="btn-danger" onClick={() => onDelete?.(course.id)} disabled={loading}>
-              Delete
-            </button>
-          </>
-        )}
-        {variant === 'browse' && !isOwner && (
-          <button className="btn-primary" onClick={() => onEnroll?.(course.id)} disabled={loading}>
-            Enroll
-          </button>
-        )}
-        {variant === 'manage' && (
-          <>
-            <button className="btn-secondary" onClick={() => onEdit?.(course)} disabled={loading}>
-              Edit
-            </button>
-            <button className="btn-danger" onClick={() => onDelete?.(course.id)} disabled={loading}>
-              Delete
-            </button>
-          </>
-        )}
-        {variant === 'enrollment' && (
-          <div className="course-actions-placeholder">
-            <p>Enrolled</p>
-          </div>
-        )}
+        <div className="course-actions">
+          {(variant === 'browse' && isOwner) || variant === 'manage' ? (
+            <>
+              <button className="btn btn-sm btn-secondary" onClick={() => onEdit?.(course)} disabled={loading}>Edit</button>
+              <button className="btn btn-sm btn-danger" onClick={() => onDelete?.(course.id)} disabled={loading}>Delete</button>
+            </>
+          ) : variant === 'browse' && !isOwner ? (
+            <button className="btn btn-sm btn-primary" onClick={() => onEnroll?.(course.id)} disabled={loading}>Enroll</button>
+          ) : variant === 'enrollment' ? (
+            <span className="badge badge-enrolled">✓ Enrolled</span>
+          ) : null}
+        </div>
       </div>
     </div>
   );
