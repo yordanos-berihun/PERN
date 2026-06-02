@@ -71,6 +71,14 @@ export default function Register() {
             {errors.password && <span className="field-error">{errors.password.message}</span>}
           </div>
 
+          <div className="form-group">
+            <label htmlFor="role">I want to join as</label>
+            <select id="role" {...register('role')}>
+              <option value="STUDENT">Student</option>
+              <option value="INSTRUCTOR">Instructor</option>
+            </select>
+          </div>
+
           <button type="submit" disabled={isRegisterLoading} className="auth-button">
             {isRegisterLoading ? 'Creating account...' : 'Register'}
           </button>

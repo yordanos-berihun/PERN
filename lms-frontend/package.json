@@ -17,6 +17,7 @@
     "zustand": "^4.3.8"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^6.0.2",
     "vite": "^5.0.0"
   }
 }

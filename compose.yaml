@@ -7,6 +7,9 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      SEED_ON_STARTUP: ${SEED_ON_STARTUP:-false}
     ports:
       - 3000:3000
 
@@ -16,7 +19,8 @@ services:
       context: lms-frontend
       dockerfile: ./Dockerfile
       args:
-        VITE_API_URL: http://lmsbackend:3000/api
+        # Nginx proxies /api/ → backend, so the browser uses a relative URL
+        VITE_API_URL: /api
     ports:
       - 5173:80
     depends_on:

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { authAPI } from '../services/api';
+import { authAPI, userAPI } from '../services/api';
 import useAuthStore from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
 
@@ -40,12 +40,15 @@ export const useAuth = () => {
     queryKey: ['profile'],
     queryFn: authAPI.getMe,
     enabled: isAuthenticated,
-    retry: false,
-    onError: () => logout()
+    retry: false
   });
 
+  useEffect(() => {
+    if (profileQuery.isError) logout();
+  }, [profileQuery.isError]);
+
   const updateProfileMutation = useMutation({
-    mutationFn: authAPI.updateProfile,
+    mutationFn: userAPI.updateProfile,
     onMutate: () => setLoading(true),
     onSuccess: (response) => {
       const updatedUser = response.data.data.user;

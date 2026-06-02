@@ -48,4 +48,9 @@ export const coursesAPI = {
   getEnrolled: (page = 1, limit = 10) => api.get('/courses/enrolled', { params: { page, limit } })
 };
 
+// User API
+export const userAPI = {
+  updateProfile: (data) => api.put('/auth/me', data)
+};
+
 export default api;
