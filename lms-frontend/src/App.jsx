@@ -6,11 +6,9 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Courses from './pages/Courses';
-import CourseDetail from './pages/CourseDetail';
 import Dashboard from './pages/Dashboard';
 import ManageCourses from './pages/ManageCourses';
 import MyEnrollments from './pages/MyEnrollments';
-import Profile from './pages/Profile';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -40,7 +38,6 @@ function AppContent() {
           
           {isAuthenticated ? (
             <>
-              <Link to="/profile">Profile</Link>
               {user?.role === 'STUDENT' && <Link to="/enrollments">My Enrollments</Link>}
               <Link to="/dashboard">Dashboard</Link>
               <div className="user-menu">
@@ -63,7 +60,6 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/courses" element={<Courses />} />
-          <Route path="/courses/:id" element={<CourseDetail />} />
         <Route path="/manage-courses" element={<ManageCourses />} />
           <Route path="/enrollments" element={<MyEnrollments />} />
         <Route 
@@ -77,10 +73,6 @@ function AppContent() {
           <Route 
             path="/dashboard" 
             element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} 
-          />
-          <Route 
-            path="/profile" 
-            element={isAuthenticated ? <Profile /> : <Navigate to="/login" />} 
           />
         </Routes>
       </main>

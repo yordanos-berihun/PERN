@@ -88,21 +88,23 @@ npm run build
 
 ## Deploy with Docker Compose
 
-The repository includes Docker Compose definitions for the backend.
+The repository includes Docker Compose definitions for the backend and frontend.
 
-Build and run the backend container:
+Build and run both services together:
 
 ```bash
 docker compose -f compose.yaml up --build
 ```
 
-For backend debugging:
+Then open the frontend at `http://localhost:5173`.
+
+For backend debugging only:
 
 ```bash
 docker compose -f compose.debug.yaml up --build
 ```
 
-The backend container will use `PORT=3000` in Docker Compose and map to `localhost:3000`.
+The backend container uses `PORT=3000` in Docker Compose and maps to `localhost:3000`.
 
 ## Notes
 

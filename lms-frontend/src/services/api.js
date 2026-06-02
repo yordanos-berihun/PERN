@@ -33,13 +33,12 @@ api.interceptors.response.use(
 export const authAPI = {
   register: (userData) => api.post('/auth/register', userData),
   login: (credentials) => api.post('/auth/login', credentials),
-  getMe: () => api.get('/auth/me'),
-  updateProfile: (profileData) => api.put('/auth/me', profileData)
+  getMe: () => api.get('/auth/me')
 };
 
 // Courses API
 export const coursesAPI = {
-  getAll: (page = 1, limit = 10, q = '') => api.get('/courses', { params: { page, limit, q } }),
+  getAll: (page = 1, limit = 10) => api.get('/courses', { params: { page, limit } }),
   getMine: (page = 1, limit = 10) => api.get('/courses/mine', { params: { page, limit } }),
   getById: (id) => api.get(`/courses/${id}`),
   create: (courseData) => api.post('/courses', courseData),

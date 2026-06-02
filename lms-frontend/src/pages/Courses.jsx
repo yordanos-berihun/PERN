@@ -1,18 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { coursesAPI } from '../services/api';
-
-const DEFAULT_PAGE_SIZE = 10;
 import useAuthStore from '../store/authStore';
 
 export default function Courses() {
   const [courses, setCourses] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageMeta, setPageMeta] = useState({ page: 1, limit: DEFAULT_PAGE_SIZE, total: 0, totalPages: 1 });
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-  const [searchInput, setSearchInput] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchLoading, setSearchLoading] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
@@ -28,42 +19,17 @@ export default function Courses() {
   const user = useAuthStore((state) => state.user);
   const isInstructor = user?.role === 'INSTRUCTOR' || user?.role === 'ADMIN';
 
-  const DEBOUNCE_MS = 400;
-
   useEffect(() => {
-    fetchCourses(currentPage);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, pageSize, searchQuery]);
+    fetchCourses();
+  }, []);
 
-  // Debounce search input -> update searchQuery after a delay
-  useEffect(() => {
-    if (searchInput.trim() === searchQuery) {
-      return undefined;
-    }
-
-    setSearchLoading(true);
-    const timer = setTimeout(() => {
-      const q = searchInput?.trim() || '';
-      setSearchQuery(q);
-      setCurrentPage(1);
-    }, DEBOUNCE_MS);
-
-    return () => clearTimeout(timer);
-  }, [searchInput, searchQuery]);
-
-  async function fetchCourses(page = 1) {
+  async function fetchCourses() {
     try {
-      const res = await coursesAPI.getAll(page, pageSize, searchQuery);
+      const res = await coursesAPI.getAll();
       setCourses(res.data.data || []);
-      if (res.data.meta) {
-        setPageMeta(res.data.meta);
-        setCurrentPage(res.data.meta.page || page);
-      }
     } catch (err) {
       console.error(err);
       setMessage('Failed to load courses.');
-    } finally {
-      setSearchLoading(false);
     }
   }
 
@@ -126,7 +92,7 @@ export default function Courses() {
       });
       setMessage('Course updated successfully.');
       cancelEdit();
-      fetchCourses(currentPage);
+      fetchCourses();
     } catch (err) {
       console.error(err);
       setMessage(err.response?.data?.error || 'Unable to update course.');
@@ -146,8 +112,7 @@ export default function Courses() {
     try {
       await coursesAPI.delete(courseId);
       setMessage('Course deleted successfully.');
-      // refresh current page after delete
-      fetchCourses(currentPage);
+      fetchCourses();
     } catch (err) {
       console.error(err);
       setMessage(err.response?.data?.error || 'Unable to delete course.');
@@ -167,7 +132,6 @@ export default function Courses() {
     try {
       await coursesAPI.enroll(courseId);
       setMessage('Enrolled successfully.');
-      // optionally refresh enrollment state or course list
     } catch (err) {
       console.error(err);
       setMessage(err.response?.data?.error || 'Unable to enroll.');
@@ -179,53 +143,10 @@ export default function Courses() {
   return (
     <div className="courses-page">
       <div className="courses-header">
-        <div>
-          <h2>Courses</h2>
-          <p>Browse available courses below. Instructors can add and manage their own courses.</p>
-        </div>
-        <div className="page-summary">{pageMeta.total ?? 0} courses available</div>
+        <h2>Courses</h2>
+        <p>Browse available courses below. Instructors can add and manage their own courses.</p>
       </div>
-      <div className="courses-controls">
-        <div className="search-control">
-          <input
-            className="search-input"
-            placeholder="Search courses by title or description"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                setSearchLoading(true);
-                setSearchQuery(searchInput.trim());
-                setCurrentPage(1);
-              }
 
-              if (e.key === 'Escape') {
-                e.preventDefault();
-                setSearchInput('');
-                setSearchLoading(true);
-                setSearchQuery('');
-                setCurrentPage(1);
-              }
-            }}
-            aria-label="Search courses"
-          />
-          <button onClick={() => { setSearchLoading(true); setSearchQuery(searchInput.trim()); setCurrentPage(1); }}>Search</button>
-          <button onClick={() => { setSearchLoading(true); setSearchInput(''); setSearchQuery(''); setCurrentPage(1); }}>Clear</button>
-          {searchLoading && <span className="search-loading">Searching...</span>}
-          <p className="search-hint">Press Enter to search, Escape to clear the field.</p>
-        </div>
-
-        <div className="page-size-control">
-          <label>Page size:</label>
-          <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }}>
-            <option value={5}>5</option>
-            <option value={10}>10</option>
-            <option value={20}>20</option>
-            <option value={50}>50</option>
-          </select>
-        </div>
-      </div>
       {message && <div className="status-message">{message}</div>}
 
       {isInstructor && (
@@ -294,9 +215,7 @@ export default function Courses() {
             return (
               <div className="card" key={course.id}>
                 <div className="course-card-header">
-                  <h3>
-                    <Link to={`/courses/${course.id}`}>{course.title}</Link>
-                  </h3>
+                  <h3>{course.title}</h3>
                   {isOwner && <span className="badge">Your course</span>}
                 </div>
                 <p>{course.description || 'No description yet.'}</p>
@@ -326,26 +245,6 @@ export default function Courses() {
           })}
         </div>
       )}
-      {/* Pagination controls */}
-      <div className="pagination-controls">
-        <button
-          className="pagination-btn"
-          onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-          disabled={currentPage === 1}
-        >
-          Previous
-        </button>
-        <span>
-          Page {pageMeta.page} of {Math.max(pageMeta.totalPages, 1)}
-        </span>
-        <button
-          className="pagination-btn"
-          onClick={() => setCurrentPage((p) => Math.min(p + 1, Math.max(pageMeta.totalPages, 1)))}
-          disabled={currentPage >= Math.max(pageMeta.totalPages, 1)}
-        >
-          Next
-        </button>
-      </div>
     </div>
   );
 }
