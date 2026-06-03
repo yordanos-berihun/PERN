@@ -71,7 +71,14 @@ const getCourseById = async (req, res) => {
 
     if (!course) return res.status(404).json({ error: 'Course not found' });
 
-    res.json({ success: true, data: course });
+    const enrollmentCount = await prisma.enrollment.count({ where: { courseId: id } });
+    let enrolled = false;
+    if (req.userId) {
+      const existing = await prisma.enrollment.findFirst({ where: { userId: req.userId, courseId: id } });
+      enrolled = !!existing;
+    }
+
+    res.json({ success: true, data: { ...course, enrollmentCount, enrolled } });
   } catch (error) {
     console.error('GetCourseById error:', error);
     res.status(500).json({ error: 'Failed to fetch course' });

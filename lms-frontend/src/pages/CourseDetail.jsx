@@ -7,7 +7,7 @@ export default function CourseDetail() {
   const { id } = useParams();
   const { user, isAuthenticated } = useAuth();
   const [course, setCourse] = useState(null);
-  const [fetching, setFetching] = useState(false);
+  const [fetching, setFetching] = useState(true);
   const [enrolling, setEnrolling] = useState(false);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('');
@@ -25,7 +25,6 @@ export default function CourseDetail() {
       const res = await coursesAPI.getById(id);
       setCourse(res.data.data);
     } catch (err) {
-      console.error(err);
       setMessage(err.response?.data?.error || 'Failed to load course.');
       setMessageType('error');
     } finally {
@@ -39,17 +38,15 @@ export default function CourseDetail() {
       setMessageType('info');
       return;
     }
-
     setEnrolling(true);
     setMessage('');
     setMessageType('');
     try {
       await coursesAPI.enroll(id);
-      setCourse((prev) => (prev ? { ...prev, enrolled: true } : prev));
+      setCourse((prev) => prev ? { ...prev, enrolled: true, enrollmentCount: (prev.enrollmentCount ?? 0) + 1 } : prev);
       setMessage('You are now enrolled!');
       setMessageType('success');
     } catch (err) {
-      console.error(err);
       setMessage(err.response?.data?.error || 'Unable to enroll.');
       setMessageType('error');
     } finally {
@@ -57,7 +54,15 @@ export default function CourseDetail() {
     }
   }
 
-  if (fetching && !course) return <p>Loading course details...</p>;
+  if (fetching) return (
+    <div className="loading-inline">
+      <div className="loading-spinner loading-md" />
+      <p>Loading course...</p>
+    </div>
+  );
+
+  const isFree = !course?.price || course.price === 0;
+  const isOwner = user?.id === course?.instructor?.id;
 
   return (
     <div className="course-detail-page">
@@ -70,50 +75,61 @@ export default function CourseDetail() {
       )}
 
       {!course ? (
-        <p>Course not found.</p>
+        <div className="empty-state">
+          <p>Course not found.</p>
+          <Link to="/courses" className="btn btn-md btn-primary">Browse Courses</Link>
+        </div>
       ) : (
         <div className="course-detail-card">
           <div className="course-detail-header">
             <div>
               <h2>{course.title}</h2>
-              <p className="muted-note">Created {new Date(course.createdAt).toLocaleDateString()}</p>
+              <p className="muted-note">
+                By {course.instructor?.name || course.instructor?.email}
+                &nbsp;&middot;&nbsp;
+                Added {new Date(course.createdAt).toLocaleDateString()}
+              </p>
             </div>
-            {course.published ? (
-              <span className="badge badge-pill success">Published</span>
-            ) : (
-              <span className="badge badge-pill muted">Draft</span>
-            )}
+            <span className={`badge badge-pill ${course.published ? 'badge-published' : 'badge-draft'}`}>
+              {course.published ? 'Published' : 'Draft'}
+            </span>
           </div>
 
-          <p className="course-description">{course.description || 'No description available.'}</p>
+          <p className="course-description">
+            {course.description || 'No description available.'}
+          </p>
 
           <div className="course-meta">
-            <span>Instructor: {course.instructor?.name || course.instructor?.email}</span>
-            <span>Price: ${course.price?.toFixed(2) ?? '0.00'}</span>
-            <span>{course.enrollmentCount ?? 0} students enrolled</span>
+            <span>💰 {isFree ? 'Free' : `$${course.price.toFixed(2)}`}</span>
+            <span>👥 {course.enrollmentCount ?? 0} student{course.enrollmentCount !== 1 ? 's' : ''} enrolled</span>
           </div>
 
           <div className="course-actions">
-            {user?.id === course.instructor?.id ? (
-              <span className="badge">Your course</span>
+            {isOwner ? (
+              <>
+                <span className="badge badge-owner">Your course</span>
+                <Link to="/manage-courses" className="btn btn-md btn-secondary">
+                  Manage Courses
+                </Link>
+              </>
             ) : course.enrolled ? (
               <>
-                <span className="badge success">Already enrolled</span>
-                <Link to="/enrollments" className="btn-secondary">
-                  View my enrollments
+                <span className="badge badge-enrolled">✓ Enrolled</span>
+                <Link to="/enrollments" className="btn btn-md btn-secondary">
+                  My Enrollments
                 </Link>
               </>
             ) : isAuthenticated ? (
               <button
-                className="btn-primary"
+                className="btn btn-md btn-primary"
                 onClick={handleEnroll}
                 disabled={enrolling}
               >
-                {enrolling ? 'Processing...' : 'Enroll now'}
+                {enrolling ? 'Processing...' : isFree ? 'Enroll for Free' : `Enroll — $${course.price.toFixed(2)}`}
               </button>
             ) : (
-              <Link to="/login" className="btn-primary">
-                Login to enroll
+              <Link to="/login" className="btn btn-md btn-primary">
+                Login to Enroll
               </Link>
             )}
           </div>

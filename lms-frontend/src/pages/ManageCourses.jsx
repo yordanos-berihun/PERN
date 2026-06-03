@@ -3,7 +3,7 @@ import { useAuth } from '../hooks/useAuth';
 import { coursesAPI } from '../services/api';
 import CourseCard from '../components/CourseCard';
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 6;
 const DEBOUNCE_MS = 400;
 
 export default function ManageCourses() {
@@ -12,61 +12,43 @@ export default function ManageCourses() {
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState({ text: '', type: '' });
   const [currentPage, setCurrentPage] = useState(1);
   const [pageMeta, setPageMeta] = useState({ page: 1, limit: PAGE_SIZE, total: 0, totalPages: 1 });
   const [editingCourse, setEditingCourse] = useState(null);
-  const [formState, setFormState] = useState({
-    title: '',
-    description: '',
-    price: '0',
-    published: true
-  });
+  const [formState, setFormState] = useState({ title: '', description: '', price: '0', published: true });
 
   const isInstructor = user?.role === 'INSTRUCTOR' || user?.role === 'ADMIN';
 
   useEffect(() => {
-    if (isInstructor) {
-      fetchCourses(currentPage);
-    }
+    if (isInstructor) fetchCourses(currentPage);
   }, [currentPage, isInstructor]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setSearchQuery(searchInput.trim());
-    }, DEBOUNCE_MS);
-
+    const timer = setTimeout(() => setSearchQuery(searchInput.trim()), DEBOUNCE_MS);
     return () => clearTimeout(timer);
   }, [searchInput]);
 
   const filteredCourses = useMemo(() => {
     if (!searchQuery) return courses;
-
-    const query = searchQuery.toLowerCase();
-    return courses.filter((course) => {
-      return (
-        course.title?.toLowerCase().includes(query) ||
-        course.description?.toLowerCase().includes(query)
-      );
-    });
+    const q = searchQuery.toLowerCase();
+    return courses.filter(
+      (c) => c.title?.toLowerCase().includes(q) || c.description?.toLowerCase().includes(q)
+    );
   }, [courses, searchQuery]);
 
   const pageCount = Math.max(pageMeta.totalPages, 1);
 
   async function fetchCourses(page = 1) {
     setLoading(true);
-    setMessage('');
-
+    setMessage({ text: '', type: '' });
     try {
       const res = await coursesAPI.getMine(page, PAGE_SIZE);
       setCourses(res.data.data || []);
-      if (res.data.meta) {
-        setPageMeta(res.data.meta);
-      }
+      if (res.data.meta) setPageMeta(res.data.meta);
       setCurrentPage(res.data.meta?.page || page);
     } catch (err) {
-      console.error(err);
-      setMessage(err.response?.data?.error || 'Unable to load courses.');
+      setMessage({ text: err.response?.data?.error || 'Unable to load courses.', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -85,19 +67,14 @@ export default function ManageCourses() {
       price: course.price?.toString() || '0',
       published: course.published
     });
-    setMessage('');
+    setMessage({ text: '', type: '' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  async function handleSubmit(event) {
-    event.preventDefault();
-    if (!isInstructor) {
-      setMessage('You are not allowed to manage courses.');
-      return;
-    }
-
+  async function handleSubmit(e) {
+    e.preventDefault();
     setLoading(true);
-    setMessage('');
-
+    setMessage({ text: '', type: '' });
     try {
       const payload = {
         title: formState.title,
@@ -105,57 +82,44 @@ export default function ManageCourses() {
         price: Number(formState.price) || 0,
         published: formState.published
       };
-
       if (editingCourse) {
         await coursesAPI.update(editingCourse.id, payload);
-        setMessage('Course updated.');
+        setMessage({ text: 'Course updated successfully.', type: 'success' });
       } else {
         await coursesAPI.create(payload);
-        setMessage('Course created.');
+        setMessage({ text: 'Course created successfully.', type: 'success' });
       }
-
       resetForm();
-      fetchCourses();
+      fetchCourses(1);
     } catch (err) {
-      console.error(err);
-      setMessage(err.response?.data?.error || 'Unable to save course.');
+      setMessage({ text: err.response?.data?.error || 'Unable to save course.', type: 'error' });
     } finally {
       setLoading(false);
     }
   }
 
   async function handleDelete(id) {
-    if (!window.confirm('Delete this course?')) return;
-
+    if (!window.confirm('Delete this course? This cannot be undone.')) return;
     setLoading(true);
-    setMessage('');
-
+    setMessage({ text: '', type: '' });
     try {
       await coursesAPI.delete(id);
-      setMessage('Course deleted.');
-      fetchCourses();
+      setMessage({ text: 'Course deleted.', type: 'success' });
+      fetchCourses(currentPage);
     } catch (err) {
-      console.error(err);
-      setMessage(err.response?.data?.error || 'Unable to delete course.');
+      setMessage({ text: err.response?.data?.error || 'Unable to delete course.', type: 'error' });
     } finally {
       setLoading(false);
     }
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !isInstructor) {
     return (
       <div className="manage-courses-page">
-        <h2>Manage Courses</h2>
-        <p>You must be logged in to manage courses.</p>
-      </div>
-    );
-  }
-
-  if (!isInstructor) {
-    return (
-      <div className="manage-courses-page">
-        <h2>Manage Courses</h2>
-        <p>Only instructors and admins can manage courses.</p>
+        <div className="empty-state">
+          <span className="empty-icon">🔒</span>
+          <p>{!isAuthenticated ? 'You must be logged in.' : 'Only instructors and admins can manage courses.'}</p>
+        </div>
       </div>
     );
   }
@@ -164,61 +128,66 @@ export default function ManageCourses() {
     <div className="manage-courses-page">
       <div className="manage-courses-header">
         <h2>Manage Courses</h2>
-        <p>Use this page to create, edit, and remove your courses.</p>
+        <p>Create, edit, and remove your courses.</p>
       </div>
 
-      {message && <div className="status-message">{message}</div>}
+      {message.text && (
+        <div className={`status-message ${message.type}`}>{message.text}</div>
+      )}
 
       <div className="manage-section">
         <div className="course-form-card">
-          <h3>{editingCourse ? 'Edit Course' : 'Create Course'}</h3>
+          <h3>{editingCourse ? `Editing: ${editingCourse.title}` : 'Create New Course'}</h3>
           <form onSubmit={handleSubmit} className="auth-form">
             <div className="form-group">
-              <label htmlFor="title">Title</label>
+              <label htmlFor="mc-title">Title</label>
               <input
-                id="title"
+                id="mc-title"
                 value={formState.title}
                 onChange={(e) => setFormState({ ...formState, title: e.target.value })}
                 placeholder="Course title"
+                required
               />
             </div>
             <div className="form-group">
-              <label htmlFor="description">Description</label>
+              <label htmlFor="mc-description">Description</label>
               <textarea
-                id="description"
+                id="mc-description"
                 value={formState.description}
                 onChange={(e) => setFormState({ ...formState, description: e.target.value })}
-                placeholder="Course description"
+                placeholder="What will students learn?"
               />
             </div>
             <div className="form-group">
-              <label htmlFor="price">Price</label>
+              <label htmlFor="mc-price">Price (USD)</label>
               <input
-                id="price"
+                id="mc-price"
                 type="number"
                 value={formState.price}
                 onChange={(e) => setFormState({ ...formState, price: e.target.value })}
                 min="0"
+                step="0.01"
+                placeholder="0 for free"
               />
             </div>
             <div className="form-group checkbox-group">
-              <label htmlFor="published">
+              <label htmlFor="mc-published">
                 <input
-                  id="published"
+                  id="mc-published"
                   type="checkbox"
                   checked={formState.published}
                   onChange={(e) => setFormState({ ...formState, published: e.target.checked })}
                 />
-                Published
+                Publish immediately
               </label>
             </div>
             <div className="button-row">
-              <button type="submit" className="auth-button" disabled={loading}>
+              <button type="submit" className="btn btn-md btn-primary" disabled={loading}>
                 {loading ? 'Saving...' : editingCourse ? 'Update Course' : 'Create Course'}
               </button>
               {editingCourse && (
-                <button type="button" className="auth-button secondary" onClick={resetForm} disabled={loading}>
-                  Cancel Edit
+                <button type="button" className="btn btn-md btn-secondary" onClick={resetForm} disabled={loading}>
+                  Cancel
                 </button>
               )}
             </div>
@@ -226,49 +195,62 @@ export default function ManageCourses() {
         </div>
 
         <div className="course-table-card">
-          <h3>My Courses</h3>
+          <div className="course-table-header">
+            <h3>My Courses</h3>
+            <span className="page-summary">{pageMeta.total} total</span>
+          </div>
           <div className="courses-controls">
             <input
+              className="search-input"
               type="search"
-              placeholder="Search your courses"
+              placeholder="Filter courses..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
             />
-            <span className="search-note">Search updates after a short delay.</span>
-          </div>
-          {loading && <p>Loading courses...</p>}
-          {!loading && filteredCourses.length === 0 && <p>No courses found.</p>}
-
-          <div className="courses-grid">
-            {filteredCourses.map((course) => (
-              <CourseCard
-                key={course.id}
-                course={course}
-                variant="manage"
-                onEdit={startEdit}
-                onDelete={handleDelete}
-                loading={loading}
-              />
-            ))}
           </div>
 
-          <div className="pagination-controls">
-            <button
-              className="pagination-btn"
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-            >
-              Previous
-            </button>
-            <span>Page {currentPage} of {pageCount}</span>
-            <button
-              className="pagination-btn"
-              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, pageCount))}
-              disabled={currentPage === pageCount}
-            >
-              Next
-            </button>
-          </div>
+          {loading ? (
+            <div className="loading-inline">
+              <div className="loading-spinner loading-sm" />
+            </div>
+          ) : filteredCourses.length === 0 ? (
+            <div className="empty-state empty-state-sm">
+              <p>{searchInput ? `No courses match "${searchInput}"` : "You haven't created any courses yet."}</p>
+            </div>
+          ) : (
+            <div className="courses-grid">
+              {filteredCourses.map((course) => (
+                <CourseCard
+                  key={course.id}
+                  course={course}
+                  variant="manage"
+                  onEdit={startEdit}
+                  onDelete={handleDelete}
+                  loading={loading}
+                />
+              ))}
+            </div>
+          )}
+
+          {pageCount > 1 && (
+            <div className="pagination-controls">
+              <button
+                className="pagination-btn"
+                onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                ← Previous
+              </button>
+              <span className="pagination-info">Page {currentPage} of {pageCount}</span>
+              <button
+                className="pagination-btn"
+                onClick={() => setCurrentPage((p) => Math.min(p + 1, pageCount))}
+                disabled={currentPage === pageCount}
+              >
+                Next →
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

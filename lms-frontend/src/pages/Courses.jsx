@@ -3,238 +3,148 @@ import { coursesAPI } from '../services/api';
 import useAuthStore from '../store/authStore';
 import CourseCard from '../components/CourseCard';
 
+const PAGE_SIZE = 9;
+const DEBOUNCE_MS = 400;
+
 export default function Courses() {
   const [courses, setCourses] = useState([]);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [price, setPrice] = useState('');
-  const [published, setPublished] = useState(true);
+  const [searchInput, setSearchInput] = useState('');
   const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState('');
   const [loading, setLoading] = useState(false);
-  const [editingCourse, setEditingCourse] = useState(null);
-  const [editTitle, setEditTitle] = useState('');
-  const [editDescription, setEditDescription] = useState('');
-  const [editPrice, setEditPrice] = useState('');
-  const [editPublished, setEditPublished] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageMeta, setPageMeta] = useState({ page: 1, totalPages: 1, total: 0 });
 
   const user = useAuthStore((state) => state.user);
-  const isInstructor = user?.role === 'INSTRUCTOR' || user?.role === 'ADMIN';
 
   useEffect(() => {
-    fetchCourses();
-  }, []);
+    fetchCourses(currentPage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage]);
 
-  async function fetchCourses() {
-    try {
-      const res = await coursesAPI.getAll();
-      setCourses(res.data.data || []);
-    } catch (err) {
-      console.error(err);
-      setMessage('Failed to load courses.');
-    }
-  }
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setCurrentPage(1);
+      fetchCourses(1);
+    }, DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchInput]);
 
-  async function handleCreateCourse(e) {
-    e.preventDefault();
+  async function fetchCourses(page = 1) {
     setLoading(true);
     setMessage('');
-
     try {
-      await coursesAPI.create({
-        title,
-        description,
-        price: Number(price) || 0,
-        published
-      });
-      setTitle('');
-      setDescription('');
-      setPrice('');
-      setPublished(true);
-      setMessage('Course created successfully.');
-      fetchCourses();
+      const res = await coursesAPI.getAll(page, PAGE_SIZE);
+      let data = res.data.data || [];
+      const q = searchInput.trim().toLowerCase();
+      if (q) {
+        data = data.filter(
+          (c) => c.title?.toLowerCase().includes(q) || c.description?.toLowerCase().includes(q)
+        );
+      }
+      setCourses(data);
+      if (res.data.meta) setPageMeta(res.data.meta);
     } catch (err) {
-      console.error(err);
-      setMessage(err.response?.data?.error || 'Unable to create course.');
+      setMessage(err.response?.data?.error || 'Failed to load courses.');
+      setMessageType('error');
     } finally {
       setLoading(false);
     }
   }
 
-  const startEdit = (course) => {
-    setEditingCourse(course);
-    setEditTitle(course.title);
-    setEditDescription(course.description || '');
-    setEditPrice(course.price?.toString() || '0');
-    setEditPublished(course.published);
-    setMessage('');
-  };
-
-  const cancelEdit = () => {
-    setEditingCourse(null);
-    setEditTitle('');
-    setEditDescription('');
-    setEditPrice('');
-    setEditPublished(true);
-  };
-
-  async function handleUpdateCourse(e) {
-    e.preventDefault();
-    if (!editingCourse) return;
-
-    setLoading(true);
-    setMessage('');
-
-    try {
-      await coursesAPI.update(editingCourse.id, {
-        title: editTitle,
-        description: editDescription,
-        price: Number(editPrice) || 0,
-        published: editPublished
-      });
-      setMessage('Course updated successfully.');
-      cancelEdit();
-      fetchCourses();
-    } catch (err) {
-      console.error(err);
-      setMessage(err.response?.data?.error || 'Unable to update course.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleDeleteCourse(courseId) {
-    if (!window.confirm('Delete this course? This cannot be undone.')) {
-      return;
-    }
-
-    setLoading(true);
-    setMessage('');
-
-    try {
-      await coursesAPI.delete(courseId);
-      setMessage('Course deleted successfully.');
-      fetchCourses();
-    } catch (err) {
-      console.error(err);
-      setMessage(err.response?.data?.error || 'Unable to delete course.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleEnrollCourse(courseId) {
+  async function handleEnroll(courseId) {
     if (!user) {
       setMessage('You must be logged in to enroll.');
+      setMessageType('info');
       return;
     }
-
-    setLoading(true);
-    setMessage('');
     try {
       await coursesAPI.enroll(courseId);
-      setMessage('Enrolled successfully.');
+      setMessage('Enrolled successfully!');
+      setMessageType('success');
+      fetchCourses(currentPage);
     } catch (err) {
-      console.error(err);
       setMessage(err.response?.data?.error || 'Unable to enroll.');
-    } finally {
-      setLoading(false);
+      setMessageType('error');
     }
   }
 
-  const isSuccess = message.toLowerCase().includes('success');
-  const isError = message && !isSuccess;
+  const pageCount = Math.max(pageMeta.totalPages, 1);
 
   return (
     <div className="courses-page">
       <div className="courses-header">
         <div>
-          <h2>Courses</h2>
-          <p>Browse available courses below. Instructors can add and manage their own courses.</p>
+          <h2>All Courses</h2>
+          <p className="page-summary">
+            {pageMeta.total > 0
+              ? `${pageMeta.total} course${pageMeta.total !== 1 ? 's' : ''} available`
+              : 'Discover something new'}
+          </p>
         </div>
       </div>
 
+      <div className="search-control">
+        <input
+          type="search"
+          className="search-input"
+          placeholder="Search by title or description..."
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+        />
+      </div>
+
       {message && (
-        <div className={`status-message ${isSuccess ? 'success' : isError ? 'error' : ''}`}>
-          {message}
-        </div>
+        <div className={`status-message ${messageType}`}>{message}</div>
       )}
 
-      {isInstructor && (
-        <div className="course-form-card">
-          <h3>{editingCourse ? 'Edit course' : 'Create a new course'}</h3>
-          <form onSubmit={editingCourse ? handleUpdateCourse : handleCreateCourse} className="auth-form">
-            <div className="form-group">
-              <label htmlFor="title">Title</label>
-              <input
-                id="title"
-                value={editingCourse ? editTitle : title}
-                onChange={(e) => editingCourse ? setEditTitle(e.target.value) : setTitle(e.target.value)}
-                placeholder="Course title"
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="description">Description</label>
-              <textarea
-                id="description"
-                value={editingCourse ? editDescription : description}
-                onChange={(e) => editingCourse ? setEditDescription(e.target.value) : setDescription(e.target.value)}
-                placeholder="Course description"
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="price">Price</label>
-              <input
-                id="price"
-                type="number"
-                value={editingCourse ? editPrice : price}
-                onChange={(e) => editingCourse ? setEditPrice(e.target.value) : setPrice(e.target.value)}
-                placeholder="0"
-              />
-            </div>
-            <div className="form-group checkbox-group">
-              <label htmlFor="published">
-                <input
-                  id="published"
-                  type="checkbox"
-                  checked={editingCourse ? editPublished : published}
-                  onChange={(e) => editingCourse ? setEditPublished(e.target.checked) : setPublished(e.target.checked)}
-                />
-                Published
-              </label>
-            </div>
-            <div className="button-row">
-              <button type="submit" className="auth-button" disabled={loading}>
-                {loading ? 'Saving...' : editingCourse ? 'Update Course' : 'Create Course'}
-              </button>
-              {editingCourse && (
-                <button type="button" className="auth-button secondary" onClick={cancelEdit} disabled={loading}>
-                  Cancel Edit
-                </button>
-              )}
-            </div>
-          </form>
+      {loading ? (
+        <div className="loading-inline">
+          <div className="loading-spinner loading-md" />
+          <p>Loading courses...</p>
         </div>
-      )}
-
-      {courses.length === 0 ? (
-        <p>No courses yet.</p>
+      ) : courses.length === 0 ? (
+        <div className="empty-state">
+          <span className="empty-icon">🔍</span>
+          <p>{searchInput ? `No courses found for "${searchInput}"` : 'No courses available yet.'}</p>
+          {searchInput && (
+            <button className="btn btn-sm btn-secondary" onClick={() => setSearchInput('')}>
+              Clear search
+            </button>
+          )}
+        </div>
       ) : (
         <div className="courses-grid">
-          {courses.map((course) => {
-            const isOwner = course.instructor?.id === user?.id;
-            return (
-              <CourseCard
-                key={course.id}
-                course={course}
-                variant="browse"
-                isOwner={isOwner}
-                onEdit={startEdit}
-                onDelete={handleDeleteCourse}
-                onEnroll={handleEnrollCourse}
-                loading={loading}
-              />
-            );
-          })}
+          {courses.map((course) => (
+            <CourseCard
+              key={course.id}
+              course={course}
+              variant="browse"
+              isOwner={course.instructor?.id === user?.id}
+              onEnroll={handleEnroll}
+            />
+          ))}
+        </div>
+      )}
+
+      {pageCount > 1 && !loading && (
+        <div className="pagination-controls">
+          <button
+            className="pagination-btn"
+            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+            disabled={currentPage === 1}
+          >
+            ← Previous
+          </button>
+          <span className="pagination-info">Page {currentPage} of {pageCount}</span>
+          <button
+            className="pagination-btn"
+            onClick={() => setCurrentPage((p) => Math.min(p + 1, pageCount))}
+            disabled={currentPage === pageCount}
+          >
+            Next →
+          </button>
         </div>
       )}
     </div>

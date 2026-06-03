@@ -14,7 +14,7 @@ const { enrollCourse, getEnrolledCourses } = require('../controllers/courseContr
 router.get('/', getAllCourses);
 router.get('/mine', auth, getInstructorCourses);
 router.get('/enrolled', auth, getEnrolledCourses);
-router.get('/:id', getCourseById);
+router.get('/:id', auth.optionalAuth, getCourseById);
 
 // Protected
 router.post('/', auth, createCourse);
