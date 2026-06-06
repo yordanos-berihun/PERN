@@ -1,4 +1,52 @@
-# LMS Project
+# 📚 LMS Project
+
+<div align="center">
+
+[![GitHub license](https://img.shields.io/github/license/yourusername/pern-lms)](LICENSE)
+[![Node.js](https://img.shields.io/badge/Node.js-20-green)](https://nodejs.org/)
+[![React](https://img.shields.io/badge/React-19-blue)](https://react.dev/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-supported-blue)](https://www.docker.com/)
+[![CI Status](https://github.com/yourusername/pern-lms/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/pern-lms/actions)
+
+A full-stack Learning Management System built with modern web technologies.
+
+[Features](#features) • [Quick Start](#quick-start) • [Tech Stack](#tech-stack) • [Contributing](#contributing)
+
+</div>
+
+## Features
+
+✨ **Core Capabilities**
+- 🔐 User authentication with JWT tokens
+- 📖 Course management and browsing
+- 📝 Course enrollment system
+- 👤 User profiles and dashboard
+- 🔒 Role-based access control
+- 📱 Responsive design with React + Vite
+- 🐳 Docker Compose support for local development
+
+## Tech Stack
+
+### Backend
+- **Node.js + Express** — Server framework
+- **Prisma ORM** — Database toolkit
+- **PostgreSQL** — Database
+- **JWT** — Authentication
+
+### Frontend
+- **React 19** — UI library
+- **Vite** — Build tool and dev server
+- **CSS3** — Styling
+
+### DevOps & Tools
+- **Docker & Docker Compose** — Containerization
+- **GitHub Actions** — CI/CD
+- **Jest** — Testing framework
+
+---
+
+## Quick Start
 
 This repository contains a learning management system split into two main applications:
 
@@ -88,9 +136,15 @@ npm run build
 
 ## Deploy with Docker Compose
 
-The repository includes Docker Compose definitions for the backend and frontend.
+The repository includes Docker Compose definitions for the backend, frontend, and PostgreSQL database.
 
-Build and run both services together:
+1. Copy the example environment variables:
+
+```bash
+cp .env.example .env
+```
+
+2. Build and run the full stack:
 
 ```bash
 docker compose -f compose.yaml up --build
@@ -98,7 +152,7 @@ docker compose -f compose.yaml up --build
 
 Then open the frontend at `http://localhost:5173`.
 
-For backend debugging only:
+For backend debugging with the same database service:
 
 ```bash
 docker compose -f compose.debug.yaml up --build
@@ -108,5 +162,6 @@ The backend container uses `PORT=3000` in Docker Compose and maps to `localhost:
 
 ## Notes
 
-- The frontend repository is not currently included in the Compose deployment; it is intended to run separately during development.
+- The Compose setup now includes PostgreSQL with a persistent `postgres_data` volume.
+- Set `SEED_ON_STARTUP=true` in `.env` to populate demo users and sample courses on startup.
 - The GitHub CI workflow runs backend tests and a frontend build on pushes to `main`/`master`.

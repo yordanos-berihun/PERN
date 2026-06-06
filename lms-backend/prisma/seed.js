@@ -73,6 +73,53 @@ async function main() {
     });
   }
 
+  const thirdCourse = await prisma.course.findFirst({
+    where: { title: 'Full-Stack JavaScript' }
+  });
+
+  if (!thirdCourse) {
+    await prisma.course.create({
+      data: {
+        title: 'Full-Stack JavaScript',
+        description: 'Master full-stack development with Node, React, and database integration.',
+        price: 129,
+        published: true,
+        instructorId: instructor.id
+      }
+    });
+  }
+
+  const fourthCourse = await prisma.course.findFirst({
+    where: { title: 'Database Design with Prisma' }
+  });
+
+  if (!fourthCourse) {
+    await prisma.course.create({
+      data: {
+        title: 'Database Design with Prisma',
+        description: 'Learn modern database modeling, migrations, and querying with Prisma ORM.',
+        price: 89,
+        published: true,
+        instructorId: instructor.id
+      }
+    });
+  }
+
+  const fifthCourse = await prisma.course.findFirst({
+    where: { title: 'Testing and Deployment' }
+  });
+
+  if (!fifthCourse) {
+    await prisma.course.create({
+      data: {
+        title: 'Testing and Deployment',
+        description: 'Cover automated testing, CI/CD, and production deployment workflows for web apps.',
+        price: 119,
+        published: true,
+        instructorId: instructor.id
+      }
+    });
+  }
 
   console.log('Seeding complete.');
   console.log('Admin login: admin@example.com / Password123');
