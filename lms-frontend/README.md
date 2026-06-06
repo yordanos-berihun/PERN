@@ -1,8 +1,9 @@
+docker compose -f ../compose.yaml up --build
 # LMS Frontend
 
-Simple React + Vite frontend skeleton for the MERN LMS.
+React + Vite frontend for the LMS project.
 
-Run locally:
+## Run locally
 
 ```bash
 cd lms-frontend
@@ -10,20 +11,25 @@ npm install
 npm run dev
 ```
 
-Set the backend base URL with `VITE_API_URL`:
+Set the backend API URL with an environment variable in a terminal:
 
 ```bash
 export VITE_API_URL=http://localhost:5000/api
 ```
 
-Production Docker Compose deployment is also supported from the repository root:
+Then open the local Vite URL shown in the terminal.
+
+## Build for production
+
+```bash
+cd lms-frontend
+npm run build
+```
+
+## Docker
+
+Build and run the full stack from the repository root:
 
 ```bash
 docker compose -f ../compose.yaml up --build
 ```
-
-```bash
-export VITE_API_URL=http://localhost:5000/api
-```
-
-Then open the development URL shown by Vite.

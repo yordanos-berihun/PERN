@@ -1,4 +1,5 @@
 services:
+  postgres:
     image: postgres:15-alpine
     restart: unless-stopped
     environment:
@@ -8,14 +9,13 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - 5432:5432postgres:
-  
+      - 5432:5432
 
   lmsbackend:
-    image: lmsbackend
     build:
       context: lms-backend
       dockerfile: ./Dockerfile
+    image: lmsbackend
     environment:
       NODE_ENV: production
       PORT: 3000
@@ -28,17 +28,16 @@ services:
       - 3000:3000
 
   lmsfrontend:
-    image: lmsfrontend
     build:
       context: lms-frontend
       dockerfile: ./Dockerfile
       args:
-        # Nginx proxies /api/ → backend, so the browser uses a relative URL
         VITE_API_URL: /api
-    ports:
-      - 5173:80
+    image: lmsfrontend
     depends_on:
       - lmsbackend
+    ports:
+      - 5173:80
 
 volumes:
   postgres_data:
