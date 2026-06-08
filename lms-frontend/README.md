@@ -1,4 +1,3 @@
-docker compose -f ../compose.yaml up --build
 # LMS Frontend
 
 React + Vite frontend for the LMS project.
@@ -18,6 +17,8 @@ export VITE_API_URL=http://localhost:5000/api
 ```
 
 Then open the local Vite URL shown in the terminal.
+
+If running with Docker Compose, the frontend is configured to proxy `/api` requests to the backend service.
 
 ## Build for production
 

@@ -17,7 +17,7 @@ cd ../lms-frontend
 npm install
 
 if [ ! -f .env ]; then
-  cat > .env << 'EOL'
+  cat > .env << EOL
 VITE_API_URL=http://localhost:5000/api
 EOL
   echo "✅ Created lms-frontend/.env"

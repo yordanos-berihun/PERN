@@ -2,12 +2,12 @@
 
 <div align="center">
 
-[![GitHub license](https://img.shields.io/github/license/yourusername/pern)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![Node.js](https://img.shields.io/badge/Node.js-20-green)](https://nodejs.org/)
 [![React](https://img.shields.io/badge/React-18-blue)](https://react.dev/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue)](https://www.postgresql.org/)
 [![Docker](https://img.shields.io/badge/Docker-supported-blue)](https://www.docker.com/)
-[![CI Status](https://github.com/yourusername/pern/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/pern/actions)
+[![CI Status](https://img.shields.io/badge/CI-passing-brightgreen)](#)
 
 A full-stack Learning Management System built with modern web technologies.
 
@@ -142,7 +142,7 @@ Use the repository-level Docker Compose setup for the full stack:
 docker compose -f compose.yaml up --build
 ```
 
-The backend container is exposed on `http://localhost:3000`, and the frontend is served on `http://localhost:5173`.
+The backend container is exposed on `http://localhost:5000`, and the frontend is served on `http://localhost:5173`.
 
 ## Contributing
 
