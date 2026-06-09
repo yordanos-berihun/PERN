@@ -26,18 +26,20 @@ const useAuthStore = create(
 
       setLoading: (loading) => set({ isLoading: loading }),
 
+     /* The `updateUser` function in the `useAuthStore` zustand store is a method that allows updating
+     the user object with new data. */
       updateUser: (userData) => set((state) => ({
         user: { ...state.user, ...userData }
       }))
     }),
     {
-      name: 'auth-storage',
+     name: 'auth-storage',
       partialize: (state) => ({
         user: state.user,
         token: state.token,
         refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated
-      })
+      }) 
     }
   )
 );

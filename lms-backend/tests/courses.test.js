@@ -59,6 +59,16 @@ test('Instructor can query their own courses', async () => {
   expect(response.body.data.some((course) => course.id === courseId)).toBe(true);
 });
 
+test('Get course detail works without authentication', async () => {
+  const response = await request(app)
+    .get(`/api/courses/${courseId}`)
+    .expect(200);
+
+  expect(response.body).toHaveProperty('success', true);
+  expect(response.body.data).toHaveProperty('id', courseId);
+  expect(response.body.data).toHaveProperty('enrolled', false);
+});
+
 test('Create course without auth returns 401', async () => {
   await request(app)
     .post('/api/courses')
@@ -128,6 +138,14 @@ test('Student can enroll and list enrolled courses', async () => {
     .post(`/api/courses/${enrollCourseId}/enroll`)
     .set('Authorization', `Bearer ${studentToken}`)
     .expect(201);
+
+  // duplicate enrollment should be rejected
+  const duplicateRes = await request(app)
+    .post(`/api/courses/${enrollCourseId}/enroll`)
+    .set('Authorization', `Bearer ${studentToken}`)
+    .expect(400);
+
+  expect(duplicateRes.body).toHaveProperty('error');
 
   // list enrolled
   const listRes = await request(app)
