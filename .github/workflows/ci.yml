@@ -62,6 +62,27 @@ jobs:
         working-directory: lms-backend
         run: npm test
 
+  security:
+    name: Security audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Audit backend dependencies
+        working-directory: lms-backend
+        run: npm audit --audit-level=high
+
+      - name: Audit frontend dependencies
+        working-directory: lms-frontend
+        run: npm audit --audit-level=high
+
   frontend:
     name: Frontend build
     runs-on: ubuntu-latest
