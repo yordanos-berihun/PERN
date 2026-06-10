@@ -40,8 +40,11 @@ export const useAuth = () => {
     queryKey: ['profile'],
     queryFn: authAPI.getMe,
     enabled: isAuthenticated,
-    retry: false
+    retry: false,
+    staleTime: 5 * 60 * 1000
   });
+
+  const isProfileLoading = profileQuery.fetchStatus === 'fetching';
 
   useEffect(() => {
     if (profileQuery.isError) logout();
@@ -82,16 +85,16 @@ export const useAuth = () => {
   return {
     user,
     isAuthenticated,
-    isLoading: useAuthStore(state => state.isLoading),
+    isLoading: useAuthStore(state => state.isLoading) || isProfileLoading,
     login: loginMutation.mutate,
     register: registerMutation.mutate,
     logout: handleLogout,
     profile: profileQuery.data?.data?.user,
     updateProfile: updateProfileMutation.mutateAsync,
-    isUpdateProfileLoading: updateProfileMutation.isLoading,
+    isUpdateProfileLoading: updateProfileMutation.isPending ?? updateProfileMutation.isLoading,
     updateProfileError: updateProfileMutation.error,
-    isLoginLoading: loginMutation.isLoading,
-    isRegisterLoading: registerMutation.isLoading,
+    isLoginLoading: loginMutation.isPending ?? loginMutation.isLoading,
+    isRegisterLoading: registerMutation.isPending ?? registerMutation.isLoading,
     loginError: loginMutation.error,
     registerError: registerMutation.error
   };
