@@ -227,6 +227,10 @@ const deleteCourse = async (req, res) => {
       const course = await prisma.course.findUnique({ where: { id } });
       if (!course) return res.status(404).json({ error: 'Course not found' });
 
+      if (course.instructorId === req.userId) {
+        return res.status(400).json({ error: 'Instructors cannot enroll in their own course' });
+      }
+
       // Prevent enrolling twice
       const existing = await prisma.enrollment.findFirst({ where: { userId: req.userId, courseId: id } });
       if (existing) return res.status(400).json({ error: 'Already enrolled in this course' });
