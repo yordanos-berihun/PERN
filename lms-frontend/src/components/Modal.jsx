@@ -1,15 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
-/**
- * Reusable Modal component
- * @param {boolean} isOpen - Whether modal is visible
- * @param {function} onClose - Callback to close modal
- * @param {string} title - Modal title
- * @param {ReactNode} children - Modal content
- * @param {ReactNode} [footer] - Modal footer (usually buttons)
- * @param {boolean} [closeButton] - Show close button (default: true)
- * @param {string} [size] - 'sm' | 'md' | 'lg' (default: 'md')
- */
 export default function Modal({
   isOpen,
   onClose,
@@ -19,18 +9,21 @@ export default function Modal({
   closeButton = true,
   size = 'md'
 }) {
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKey = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
     <>
-      {/* Backdrop */}
       <div className="modal-backdrop" onClick={onClose} />
-
-      {/* Modal */}
-      <div className={`modal modal-${size}`}>
-        {/* Header */}
+      <div className={`modal modal-${size}`} role="dialog" aria-modal="true" aria-labelledby="modal-title">
         <div className="modal-header">
-          <h2 className="modal-title">{title}</h2>
+          <h2 className="modal-title" id="modal-title">{title}</h2>
           {closeButton && (
             <button
               className="modal-close"
@@ -42,13 +35,9 @@ export default function Modal({
             </button>
           )}
         </div>
-
-        {/* Body */}
         <div className="modal-body">
           {children}
         </div>
-
-        {/* Footer */}
         {footer && (
           <div className="modal-footer">
             {footer}
