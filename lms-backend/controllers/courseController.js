@@ -30,23 +30,24 @@ const getAllCourses = async (req, res) => {
     const limit = Math.min(Math.max(Number(req.query.limit) || 10, 1), 100);
     const offset = (page - 1) * limit;
 
+    const include = {
+      instructor: { select: { id: true, name: true, email: true } },
+      ...(req.userId && { enrollments: { where: { userId: req.userId }, select: { id: true } } })
+    };
+
     const [total, courses] = await Promise.all([
       prisma.course.count(),
-      prisma.course.findMany({
-        skip: offset,
-        take: limit,
-        include: {
-          instructor: {
-            select: { id: true, name: true, email: true }
-          }
-        },
-        orderBy: { createdAt: 'desc' }
-      })
+      prisma.course.findMany({ skip: offset, take: limit, include, orderBy: { createdAt: 'desc' } })
     ]);
+
+    const data = courses.map(({ enrollments, ...c }) => ({
+      ...c,
+      enrolled: enrollments ? enrollments.length > 0 : false
+    }));
 
     res.json({
       success: true,
-      data: courses,
+      data,
       meta: {
         page,
         limit,

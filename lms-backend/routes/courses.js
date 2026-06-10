@@ -11,7 +11,7 @@ const {
 const { enrollCourse, getEnrolledCourses } = require('../controllers/courseController');
 
 // Public
-router.get('/', getAllCourses);
+router.get('/', auth.optionalAuth, getAllCourses);
 router.get('/mine', auth, getInstructorCourses);
 router.get('/enrolled', auth, getEnrolledCourses);
 router.get('/:id', auth.optionalAuth, getCourseById);

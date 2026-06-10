@@ -63,7 +63,9 @@ export default function Courses() {
       await coursesAPI.enroll(courseId);
       setMessage('Enrolled successfully!');
       setMessageType('success');
-      fetchCourses(currentPage);
+      setCourses((prev) =>
+        prev.map((c) => (c.id === courseId ? { ...c, enrolled: true } : c))
+      );
     } catch (err) {
       setMessage(err.response?.data?.error || 'Unable to enroll.');
       setMessageType('error');

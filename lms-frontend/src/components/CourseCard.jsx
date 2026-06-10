@@ -25,6 +25,9 @@ export default function CourseCard({
           {variant === 'browse' && isOwner && (
             <span className="badge badge-owner">Yours</span>
           )}
+          {variant === 'browse' && !isOwner && course.enrolled && (
+            <span className="badge badge-enrolled">✓ Enrolled</span>
+          )}
           {(variant === 'manage') && (
             <span className={`badge ${course.published ? 'badge-published' : 'badge-draft'}`}>
               {course.published ? 'Published' : 'Draft'}
@@ -76,13 +79,19 @@ export default function CourseCard({
               <Link to={`/courses/${course.id}`} className="btn btn-sm btn-secondary">
                 Details
               </Link>
-              <button
-                className="btn btn-sm btn-primary"
-                onClick={() => onEnroll?.(course.id)}
-                disabled={loading}
-              >
-                Enroll
-              </button>
+              {course.enrolled ? (
+                <Link to="/enrollments" className="btn btn-sm btn-secondary">
+                  My Enrollments
+                </Link>
+              ) : (
+                <button
+                  className="btn btn-sm btn-primary"
+                  onClick={() => onEnroll?.(course.id)}
+                  disabled={loading}
+                >
+                  Enroll
+                </button>
+              )}
             </>
           ) : variant === 'enrollment' ? (
             <Link to={`/courses/${course.id}`} className="btn btn-sm btn-secondary">
