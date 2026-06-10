@@ -1,6 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
-
-const prisma = new PrismaClient();
+const prisma = require('../prisma/client');
 
 const validateCoursePayload = ({ title, description, price, published }) => {
   if (!title || String(title).trim().length < 3) {

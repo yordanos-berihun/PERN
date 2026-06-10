@@ -26,7 +26,13 @@ api.interceptors.request.use(
 // Response interceptor to forward errors
 api.interceptors.response.use(
   (response) => response,
-  (error) => Promise.reject(error)
+  (error) => {
+    if (error.response?.status === 401) {
+      useAuthStore.getState().logout();
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
 );
 
 // Auth API

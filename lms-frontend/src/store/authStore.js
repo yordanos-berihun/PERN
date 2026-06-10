@@ -33,13 +33,11 @@ const useAuthStore = create(
       }))
     }),
     {
-     name: 'auth-storage',
+      name: 'auth-storage',
       partialize: (state) => ({
         user: state.user,
-        token: state.token,
-        refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated
-      }) 
+      })
     }
   )
 );
