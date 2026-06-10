@@ -8,7 +8,7 @@ export default function Dashboard() {
   const displayUser = profile || user;
   const isInstructor = displayUser?.role === 'INSTRUCTOR' || displayUser?.role === 'ADMIN';
 
-  const [stats, setStats] = useState({ count: 0, loading: true });
+  const [stats, setStats] = useState({ count: 0, loading: true, error: false });
 
   useEffect(() => {
     async function fetchStats() {
@@ -16,9 +16,9 @@ export default function Dashboard() {
         const res = isInstructor
           ? await coursesAPI.getMine(1, 1)
           : await coursesAPI.getEnrolled(1, 1);
-        setStats({ count: res.data.meta?.total ?? 0, loading: false });
+        setStats({ count: res.data.meta?.total ?? 0, loading: false, error: false });
       } catch {
-        setStats({ count: 0, loading: false });
+        setStats({ count: 0, loading: false, error: true });
       }
     }
     fetchStats();
@@ -51,10 +51,12 @@ export default function Dashboard() {
         <div className="dashboard-card stat-card">
           <h3>{isInstructor ? 'My Courses' : 'Enrolled Courses'}</h3>
           <div className="stat-number">
-            {stats.loading ? '—' : stats.count}
+            {stats.loading ? '—' : stats.error ? '!' : stats.count}
           </div>
-          <p className="stat-label">
-            {isInstructor ? 'courses created' : 'courses enrolled'}
+          <p className="stat-label" style={stats.error ? { color: '#ef4444' } : {}}>
+            {stats.error
+              ? 'Could not load stats'
+              : isInstructor ? 'courses created' : 'courses enrolled'}
           </p>
           <div style={{ marginTop: '1rem' }}>
             {isInstructor
