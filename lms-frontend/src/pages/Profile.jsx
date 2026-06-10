@@ -102,8 +102,15 @@ export default function Profile() {
             <input
               id="currentPassword"
               type="password"
-              {...register('currentPassword')}
+              {...register('currentPassword', {
+                validate: (value) =>
+                  !password || value.length > 0 || 'Current password is required to set a new password'
+              })}
+              className={errors.currentPassword ? 'error' : ''}
             />
+            {errors.currentPassword && (
+              <span className="field-error">{errors.currentPassword.message}</span>
+            )}
           </div>
 
           <div className="form-group">
@@ -129,7 +136,7 @@ export default function Profile() {
               type="password"
               {...register('confirmPassword', {
                 validate: (value) =>
-                  value === password || 'Passwords do not match'
+                  !password || value === password || 'Passwords do not match'
               })}
               className={errors.confirmPassword ? 'error' : ''}
             />
