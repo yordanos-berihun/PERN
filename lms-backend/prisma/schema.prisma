@@ -59,8 +59,9 @@ model Enrollment {
   @@map("enrollments")
 }
 
-enum Role {
+`enum Role {
   STUDENT
   INSTRUCTOR
   ADMIN
 }
+// good news
